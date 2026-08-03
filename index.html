@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML Security Platform — Live Dashboards</title>
+<style>
+:root{--bg:#0a0e14;--surface:#141a22;--border:#2a3645;--text:#e8edf4;--muted:#8899aa;--blue:#4ea7ff;--teal:#32d4ba;--green:#44d17c;--amber:#ffbe4f;--red:#fa5d72;--violet:#a780ff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Inter,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:24px;min-height:100vh}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.8rem;font-weight:800;margin-bottom:6px}
+.subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:32px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color 0.2s,transform 0.2s;text-decoration:none;color:var(--text);display:block}
+.card:hover{border-color:var(--blue);transform:translateY(-2px)}
+.card h3{font-size:0.95rem;margin-bottom:6px;color:var(--blue)}
+.card p{font-size:0.8rem;color:var(--muted);line-height:1.4}
+.card .tag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:12px;font-size:0.68rem;font-weight:600;border:1px solid var(--border)}
+.tag-core{color:var(--teal);border-color:rgba(50,212,186,0.3)}
+.tag-detector{color:var(--green);border-color:rgba(68,209,124,0.3)}
+.tag-infra{color:var(--violet);border-color:rgba(167,128,255,0.3)}
+.tag-gateway{color:var(--amber);border-color:rgba(255,190,79,0.3)}
+.note{margin-top:32px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;color:var(--muted)}
+.note strong{color:var(--text)}
+footer{margin-top:24px;text-align:center;color:var(--muted);font-size:0.72rem}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>ML Security Platform — Live Dashboards</h1>
+<p class="subtitle">Interactive evidence dashboards for 13 ML security repositories. Each shows real product data — scan results, detection metrics, benchmark performance.</p>
+
+<div class="grid">
+<a class="card" href="/mcp-security-gateway-monitor/">
+<h3>MCP Security Gateway Monitor</h3>
+<p>5-layer tool-call firewall for MCP agents. Red-team simulation: 37 attacks, 51% detection rate. Defense gap analysis + invocation graph.</p>
+<span class="tag tag-gateway">Gateway</span>
+</a>
+
+<a class="card" href="/hf-model-provenance-scanner/">
+<h3>HF Model Provenance Scanner</h3>
+<p>Supply chain attack detection for HuggingFace models. 30/30 attacks detected, P99 &lt;200ms. Real-time SOC view + security operations.</p>
+<span class="tag tag-detector">Detector</span>
+</a>
+
+<a class="card" href="/llm-redteam-framework/">
+<h3>LLM Redteam Framework</h3>
+<p>Prompt injection detector. F1=0.93 on deepset/prompt-injections, 0.70 on transfer eval. Scenario risk surface + confidence distributions.</p>
+<span class="tag tag-detector">Detector</span>
+</a>
+
+<a class="card" href="/adversarial-ml-lab/">
+<h3>Adversarial ML Lab</h3>
+<p>FGSM/PGD/C&W attacks + certified defenses for PyTorch models. Robustness evaluation framework.</p>
+<span class="tag tag-detector">Detector</span>
+</a>
+
+<a class="card" href="/model-privacy-attacks/">
+<h3>Model Privacy Attacks</h3>
+<p>Membership inference + model extraction attacks. Privacy risk evaluation for ML models.</p>
+<span class="tag tag-detector">Detector</span>
+</a>
+
+<a class="card" href="/dataset-poisoning-detector/">
+<h3>Dataset Poisoning Detector</h3>
+<p>Training data anomaly detection. ROC-AUC ~0.53-0.56 (honest). Sample triage + drift monitoring.</p>
+<span class="tag tag-detector">Detector</span>
+</a>
+
+<a class="card" href="/PulseNet-RUL-Forecasting/">
+<h3>PulseNet RUL Forecasting</h3>
+<p>Remaining Useful Life prediction for industrial equipment. NASA C-MAPSS benchmarks. F1=0.54, P99 4.3ms inference.</p>
+<span class="tag tag-detector">ICS/OT</span>
+</a>
+
+<a class="card" href="/attack-v19-core/">
+<h3>ATT&CK v19 Core</h3>
+<p>MITRE ATT&CK v19 data models. 222 techniques, 475 sub-techniques, 17 revoked remapped. Technique browser + coverage map.</p>
+<span class="tag tag-core">Core Library</span>
+</a>
+
+<a class="card" href="/attack-detection-engine/">
+<h3>Attack Detection Engine</h3>
+<p>5-source telemetry pipeline. 42 detection rules mapping to ATT&CK techniques. Log, traffic, behavior, event, code analysis.</p>
+<span class="tag tag-core">Core Library</span>
+</a>
+
+<a class="card" href="/aws-agent-identity-guard/">
+<h3>AWS Agent Identity Guard</h3>
+<p>Static IAM policy linter for AI agent workloads. Checks wildcards, PassRole, trust policies, privilege escalation.</p>
+<span class="tag tag-infra">Infrastructure</span>
+</a>
+
+<a class="card" href="/unified-ml-security-platform/">
+<h3>Unified ML Security Platform</h3>
+<p>Architecture spec integrating all 7 products. Health checks, portfolio measurements, integration map.</p>
+<span class="tag tag-infra">Architecture</span>
+</a>
+
+<a class="card" href="/mlsec-benchmark-suite/">
+<h3>ML Security Benchmark Suite</h3>
+<p>Benchmark runner with immutable signed evidence. Smoke tests, HMAC-SHA256 result signatures, schema validation.</p>
+<span class="tag tag-infra">Infrastructure</span>
+</a>
+
+<a class="card" href="/ml-security-command-center/">
+<h3>ML Security Command Center</h3>
+<p>Unified view of all 11 products. Aggregate status grid with detection metrics. (Simulated data — visualization only.)</p>
+<span class="tag tag-infra">Visualization</span>
+</a>
+</div>
+
+<div class="note">
+<strong>Honesty note:</strong> Most dashboards display static demonstration data embedded in HTML. They show what the tools produce, not live feeds. The MCP gateway dashboard is the only one with real-time WebSocket capability when connected to a running server. Numbers shown are from actual benchmark runs committed to each repository's evidence/ directory.
+</div>
+
+<footer>
+github.com/poojakira — ML Security Portfolio — Hosted on Cloudflare Pages
+</footer>
+</div>
+</body>
+</html>
