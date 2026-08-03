@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check required static assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          required = ["index.html", "README.md", "SECURITY.md"]
+          missing = [path for path in required if not Path(path).exists()]
+          if missing:
+              raise SystemExit(f"missing required files: {missing}")
+          html = Path("index.html").read_text(encoding="utf-8")
+          banned = ["SLSA Level 3", "Cosign keyless", "unrejectable", "100% on schedule"]
+          found = [term for term in banned if term.lower() in html.lower()]
+          if found:
+              raise SystemExit(f"unsupported portfolio claim(s): {found}")
+          print("static portfolio checks passed")
+          PY
