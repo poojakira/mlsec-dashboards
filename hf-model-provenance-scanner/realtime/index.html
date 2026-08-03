@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HF Provenance Scanner - Realtime SOC</title>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js" onerror="window.__threeFailed=true"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" onerror="window.__chartFailed=true"></script>
+<style>
+:root{
+  --bg:#05070b;--panel:rgba(9,14,24,.78);--panel-strong:rgba(10,17,29,.92);
+  --line:rgba(137,167,205,.22);--line-hot:rgba(247,86,110,.58);
+  --text:#eef5ff;--muted:#91a4bb;--quiet:#5f7087;--cyan:#42d9ff;
+  --green:#6affb4;--amber:#ffc766;--red:#ff5c7c;--violet:#a995ff;
+  --blue:#6ca5ff;--radius:8px;--shadow:0 18px 60px rgba(0,0,0,.36);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;overflow:hidden;background:var(--bg);color:var(--text);
+  font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  letter-spacing:0;
+}
+button,input,select{font:inherit}
+#sceneHost{position:fixed;inset:0;background:#05070b;z-index:0}
+#threatScene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(5,7,11,.76),rgba(5,7,11,.18) 39%,rgba(5,7,11,.66))}
+.fallback-map{
+  position:absolute;inset:0;display:none;overflow:hidden;background:
+    linear-gradient(rgba(137,167,205,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(137,167,205,.08) 1px,transparent 1px),#05070b;
+  background-size:54px 54px;
+}
+.fallback-map.active{display:block}
+.fallback-node{
+  position:absolute;width:10px;height:10px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 0 9px rgba(255,92,124,.13),0 0 30px rgba(255,92,124,.8);
+  animation:pulse 1.8s ease-in-out infinite;
+}
+.fallback-link{
+  position:absolute;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--red),transparent);
+  transform-origin:left center;animation:sweep 3.4s linear infinite;
+}
+.app{position:relative;z-index:1;height:100vh;display:grid;grid-template-rows:68px minmax(0,1fr);overflow:hidden}
+.topbar{
+  display:grid;grid-template-columns:minmax(270px,1fr) auto auto;gap:12px;align-items:center;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(5,8,13,.76);
+  backdrop-filter:blur(16px);
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{
+  width:42px;height:42px;border-radius:8px;border:1px solid rgba(66,217,255,.55);
+  display:grid;place-items:center;color:#071017;background:var(--cyan);font-weight:900;
+  box-shadow:0 0 28px rgba(66,217,255,.28);flex:0 0 auto;
+}
+h1,h2,h3,p{margin:0}
+h1{font-size:18px;line-height:1.1;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subtitle{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.status-strip{display:flex;gap:8px;align-items:center;justify-content:flex-end;min-width:0}
+.chip{
+  min-height:32px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);
+  background:rgba(10,17,29,.72);color:var(--muted);display:inline-flex;align-items:center;gap:7px;
+  white-space:nowrap;font-size:12px;
+}
+.chip.critical{border-color:var(--line-hot);color:#ffdce3;background:rgba(255,92,124,.12)}
+.chip.ok{border-color:rgba(106,255,180,.4);color:var(--green);background:rgba(106,255,180,.08)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 14px currentColor;flex:0 0 auto}
+.search{
+  width:min(34vw,390px);height:36px;border:1px solid var(--line);border-radius:8px;
+  background:rgba(8,13,22,.72);color:var(--text);padding:0 12px;outline:0;min-width:220px;
+}
+.search:focus{border-color:rgba(66,217,255,.65);box-shadow:0 0 0 3px rgba(66,217,255,.12)}
+.workspace{
+  min-height:0;overflow:auto;padding:14px;display:grid;gap:12px;
+  grid-template-columns:minmax(260px,.78fr) minmax(380px,1.25fr) minmax(290px,.88fr);
+  grid-template-rows:auto auto 1fr;grid-template-areas:
+    "left center right"
+    "left center right"
+    "bottom bottom bottom";
+}
+.left-rail,.center-ops,.right-rail,.bottom-dock{display:grid;gap:12px;align-content:start;min-width:0}
+.left-rail{grid-area:left}.center-ops{grid-area:center}.right-rail{grid-area:right}.bottom-dock{grid-area:bottom;grid-template-columns:1.1fr .9fr .9fr}
+.panel{
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);
+  box-shadow:var(--shadow);backdrop-filter:blur(18px);padding:13px;min-width:0;overflow:hidden;
+}
+.scene-panel{
+  min-height:430px;background:rgba(6,10,16,.42);display:grid;align-content:space-between;
+  border-color:rgba(66,217,255,.28);
+}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.panel-head h2{font-size:12px;text-transform:uppercase;color:#dbe8f7;letter-spacing:.04em}
+.small{font-size:11px;color:var(--muted)}
+.mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace}
+.metric{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;font-size:26px;font-weight:800;line-height:1.1}
+.metric-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;padding:10px 0;border-top:1px solid rgba(137,167,205,.14)}
+.metric-row:first-of-type{border-top:0}
+.label{font-size:11px;text-transform:uppercase;color:var(--muted)}
+.trend{font-size:11px;color:var(--green);white-space:nowrap}.trend.hot{color:var(--red)}.trend.warn{color:var(--amber)}
+.scene-readout{align-self:end;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.readout{border:1px solid rgba(137,167,205,.18);border-radius:8px;background:rgba(7,11,18,.74);padding:9px;min-height:72px}
+.readout strong{display:block;font-size:20px;line-height:1.15}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.swatch{width:10px;height:10px;border-radius:2px;background:var(--cyan)}
+.swatch.red{background:var(--red)}.swatch.green{background:var(--green)}.swatch.amber{background:var(--amber)}
+.feed{display:grid;gap:8px;max-height:318px;overflow:auto;padding-right:2px}
+.feed-row{display:grid;grid-template-columns:62px 80px minmax(0,1fr);gap:9px;align-items:center;padding:8px;border:1px solid rgba(137,167,205,.14);border-radius:8px;background:rgba(255,255,255,.025)}
+.feed-row strong,.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{min-height:24px;border-radius:6px;padding:3px 7px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(137,167,205,.18);font-size:11px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+.badge.critical{color:#fff;border-color:rgba(255,92,124,.5);background:rgba(255,92,124,.16)}
+.badge.high{color:var(--amber);border-color:rgba(255,199,102,.42);background:rgba(255,199,102,.12)}
+.badge.medium{color:var(--cyan);border-color:rgba(66,217,255,.38);background:rgba(66,217,255,.10)}
+.badge.blocked{color:var(--green);border-color:rgba(106,255,180,.42);background:rgba(106,255,180,.10)}
+.supply-chain{display:grid;gap:9px}
+.stage{display:grid;grid-template-columns:32px minmax(0,1fr) 58px;gap:9px;align-items:center;border:1px solid rgba(137,167,205,.14);border-radius:8px;padding:8px;background:rgba(255,255,255,.025)}
+.node-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:rgba(66,217,255,.12);border:1px solid rgba(66,217,255,.28);color:var(--cyan);font-weight:900}
+.bar{height:7px;border-radius:999px;background:rgba(137,167,205,.16);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));border-radius:inherit}
+.chart{height:190px;position:relative}
+.chart canvas{width:100%!important;height:100%!important}
+.chart-fallback{display:grid;gap:8px;margin-top:8px}
+.fallback-bar{display:grid;grid-template-columns:96px 1fr 40px;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.fallback-bar i{height:8px;border-radius:999px;background:var(--cyan);display:block}
+.matrix-grid{display:grid;grid-template-columns:repeat(5,minmax(88px,1fr));gap:7px}
+.tactic{min-height:66px;border:1px solid rgba(137,167,205,.16);border-radius:8px;padding:8px;background:rgba(255,255,255,.025)}
+.tactic b{display:block;font-size:11px;color:#dce9f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tactic span{display:block;font-size:18px;margin-top:5px;font-weight:900}
+.queue{display:grid;gap:8px}
+.queue-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;border-top:1px solid rgba(137,167,205,.14);padding-top:8px}
+.queue-row:first-child{border-top:0;padding-top:0}
+.queue-row strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.footer-note{color:var(--quiet);font-size:11px;margin-top:8px}
+.warning{display:none;position:fixed;left:14px;bottom:14px;z-index:5;max-width:min(560px,calc(100vw - 28px));border:1px solid rgba(255,199,102,.46);background:rgba(34,24,10,.92);color:#ffe5b3;border-radius:8px;padding:10px 12px;box-shadow:var(--shadow)}
+.warning.active{display:block}
+@keyframes pulse{50%{opacity:.46;transform:scale(.82)}}
+@keyframes sweep{from{transform:scaleX(.08) rotate(var(--angle));opacity:0}20%{opacity:1}to{transform:scaleX(1) rotate(var(--angle));opacity:0}}
+@media(max-width:1180px){body{overflow:auto}.app{height:auto;min-height:100vh}.workspace{overflow:visible;grid-template-columns:1fr 1fr;grid-template-areas:"center center" "left right" "bottom bottom"}.bottom-dock{grid-template-columns:1fr 1fr}.search{width:260px}.scene-panel{min-height:390px}}
+@media(max-width:760px){.topbar{grid-template-columns:1fr;align-items:stretch}.status-strip{justify-content:flex-start;overflow:auto}.search{width:100%;min-width:0}.workspace{padding:10px;grid-template-columns:1fr;grid-template-areas:"center" "left" "right" "bottom"}.bottom-dock{grid-template-columns:1fr}.scene-readout{grid-template-columns:1fr}.matrix-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.scene-panel{min-height:360px}.feed-row{grid-template-columns:58px 76px minmax(0,1fr)}h1{font-size:16px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="sceneHost">
+  <canvas id="threatScene" aria-label="3D cyber supply chain threat map"></canvas>
+  <div id="fallbackMap" class="fallback-map" aria-hidden="true"></div>
+  <div class="scene-shade" aria-hidden="true"></div>
+</div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="mark">HF</div><div><h1>HF Model Provenance Scanner / Realtime Security Ops</h1><p class="subtitle">Static telemetry console for model supply-chain scanning, provenance risk, and incident containment.</p></div></div>
+    <input id="search" class="search" autocomplete="off" placeholder="Filter model, source, tactic, hash...">
+    <div class="status-strip" aria-label="system status"><span class="chip critical"><i class="dot"></i>Threat Level Elevated</span><span class="chip ok"><i class="dot"></i>Scanner Online</span><span class="chip"><span id="clock" class="mono">--:--:-- UTC</span></span></div>
+  </header>
+  <main class="workspace">
+    <section class="left-rail" aria-label="telemetry summary">
+      <div class="panel"><div class="panel-head"><h2>Live Model Intake</h2><span class="small mono">60m window</span></div><div id="metrics"></div></div>
+      <div class="panel"><div class="panel-head"><h2>Supply Chain Stages</h2><span class="small">risk weighted</span></div><div id="stages" class="supply-chain"></div></div>
+      <div class="panel"><div class="panel-head"><h2>Containment Queue</h2><span class="small" id="queueCount">0 active</span></div><div id="queue" class="queue"></div></div>
+    </section>
+    <section class="center-ops">
+      <div class="panel scene-panel"><div><div class="panel-head"><h2>3D Threat Map / Model Provenance Graph</h2><span class="small" id="sceneStatus">WebGL initializing</span></div><div class="legend"><span><i class="swatch"></i>Trusted registry</span><span><i class="swatch amber"></i>Unverified artifact</span><span><i class="swatch red"></i>Active block</span><span><i class="swatch green"></i>Signed model</span></div></div><div class="scene-readout"><div class="readout"><span class="label">Provenance Trust</span><strong id="trustScore" class="mono">--</strong><span class="small">signature + lineage</span></div><div class="readout"><span class="label">Blocked Ingress</span><strong id="blockedCount" class="mono">--</strong><span class="small">auto policy actions</span></div><div class="readout"><span class="label">Mean Contain</span><strong id="containTime" class="mono">--</strong><span class="small">minutes to isolate</span></div></div></div>
+      <div class="panel"><div class="panel-head"><h2>ATT&CK And ML Supply-Chain Pressure</h2><span class="small">live-looking synthetic stream</span></div><div id="matrix" class="matrix-grid"></div></div>
+    </section>
+    <section class="right-rail">
+      <div class="panel"><div class="panel-head"><h2>Threat Feed</h2><span class="small" id="feedCount">0 rows</span></div><div id="feed" class="feed"></div></div>
+      <div class="panel"><div class="panel-head"><h2>Risk Distribution</h2><span class="small">Chart.js</span></div><div class="chart"><canvas id="severityChart"></canvas><div id="severityFallback" class="chart-fallback"></div></div></div>
+    </section>
+    <section class="bottom-dock" aria-label="analytics">
+      <div class="panel"><div class="panel-head"><h2>Blocked Events Over Time</h2><span class="small">rolling 10 samples</span></div><div class="chart"><canvas id="blocksChart"></canvas><div id="blocksFallback" class="chart-fallback"></div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Scanner Coverage</h2><span class="small">artifact classes</span></div><div class="chart"><canvas id="coverageChart"></canvas><div id="coverageFallback" class="chart-fallback"></div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Operator Notes</h2><span class="small">static browser mode</span></div><div class="metric-row"><div><div class="label">CDN Status</div><div id="cdnStatus">Checking libraries</div></div><span class="trend warn">fallback ready</span></div><div class="metric-row"><div><div class="label">WebGL Surface</div><div id="webglStatus">Not verified</div></div><span class="trend" id="webglTrend">pending</span></div><p class="footer-note">No build step required. Telemetry is deterministic synthetic data rendered entirely in this file.</p></div>
+    </section>
+  </main>
+</div>
+<div id="warning" class="warning" role="status"></div>
+<script>
+(function(){
+  "use strict";
+  const $=id=>document.getElementById(id);
+  let seed=90210, chartRefs=[], sceneState=null;
+  const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+  const pick=a=>a[Math.floor(rnd()*a.length)];
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+  const fmt=n=>n.toLocaleString("en-US");
+  const models=["llama-guard-ops","bert-phish-detector","clip-safety-gate","fraud-xgb-prod","mistral-rag-filter","resnet-malware-v2","tabular-risk-lgbm","voice-id-encoder"];
+  const sources=["hf://community","s3://model-drop","ghcr.io/runner","registry.internal","notebook-upload","partner-sftp","ci-artifact","mirror-cache"];
+  const tactics=["Initial Access","Execution","Persistence","Credential Access","Defense Evasion","Collection","Command Control","Exfiltration","Impact","Supply Chain"];
+  const signals=["pickle opcode chain","unsigned safetensors","model card drift","hash mismatch","token probe","egress beacon","dependency confusion","weight poisoning","runner secret scan","license anomaly"];
+  const stages=[["IN","Model Intake",86],["SIG","Signature Check",74],["SB","SBOM Compare",68],["PX","Pickle Gate",93],["EX","Sandbox Exec",61],["LN","Lineage Match",78],["RG","Registry Push",54]];
+  const events=Array.from({length:96},(_,i)=>{const severity=rnd()>.82?"critical":rnd()>.58?"high":"medium";const blocked=rnd()>.07;return{id:i+1,time:new Date(Date.now()-i*74000).toISOString().slice(11,19),model:pick(models),source:pick(sources),tactic:pick(tactics),signal:pick(signals),severity,status:blocked?"blocked":"watch",hash:Math.floor(rnd()*0xfffffff).toString(16).padStart(7,"0")}});
+  let visible=events.slice(0,28);
+  function renderMetrics(){const blocked=events.filter(e=>e.status==="blocked").length;const critical=events.filter(e=>e.severity==="critical").length;const trust=clamp(91-critical,68,96);$("trustScore").textContent=trust+"%";$("blockedCount").textContent=fmt(blocked);$("containTime").textContent=(4.6+rnd()*1.8).toFixed(1);$("metrics").innerHTML=[["Artifacts Scanned",fmt(12840+Math.floor(rnd()*180)),"+312/min",""],["Policy Blocks",fmt(blocked),"+18 active","hot"],["Unsigned Models",fmt(critical+23),"needs review","warn"],["Verified Lineage",trust+"%","+3.2% today",""]].map(([l,v,t,c])=>`<div class="metric-row"><div><div class="label">${l}</div><div class="metric">${v}</div></div><span class="trend ${c}">${t}</span></div>`).join("")}
+  function renderStages(){$("stages").innerHTML=stages.map(([code,name,value])=>`<div class="stage"><div class="node-icon">${code}</div><div class="truncate"><strong>${name}</strong><div class="bar"><i style="width:${value}%"></i></div></div><span class="mono">${value}%</span></div>`).join("")}
+  function renderQueue(){const open=visible.filter(e=>e.severity!=="medium").slice(0,5);$("queueCount").textContent=open.length+" active";$("queue").innerHTML=open.map(e=>`<div class="queue-row"><div><strong>${e.model}</strong><div class="small truncate">${e.signal} from ${e.source}</div></div><span class="badge ${e.severity}">${e.severity}</span></div>`).join("")}
+  function renderFeed(){const q=$("search").value.trim().toLowerCase();const rows=visible.filter(e=>!q||Object.values(e).join(" ").toLowerCase().includes(q)).slice(0,18);$("feedCount").textContent=rows.length+" rows";$("feed").innerHTML=rows.map(e=>`<div class="feed-row"><span class="mono small">${e.time}</span><span class="badge ${e.severity}">${e.severity}</span><div class="truncate"><strong>${e.model}</strong><div class="small truncate">${e.status} ${e.signal} / ${e.hash}</div></div></div>`).join("")}
+  function renderMatrix(){const counts=tactics.map(t=>[t,events.filter(e=>e.tactic===t).length+Math.floor(rnd()*6)]);$("matrix").innerHTML=counts.map(([name,count])=>`<div class="tactic"><b>${name}</b><span class="mono">${count}</span><small class="small">${pick(signals)}</small></div>`).join("")}
+  function chartTheme(){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#d9e8f7",boxWidth:10}}},scales:{x:{ticks:{color:"#91a4bb",maxRotation:0},grid:{color:"rgba(137,167,205,.10)"}},y:{ticks:{color:"#91a4bb"},grid:{color:"rgba(137,167,205,.10)"}}}}}
+  function fallbackBars(id,rows){const max=Math.max(...rows.map(r=>r[1]),1);$(id).innerHTML=rows.map(([label,value,color])=>`<div class="fallback-bar"><span class="truncate">${label}</span><i style="width:${Math.max(4,value/max*100)}%;background:${color||"var(--cyan)"}"></i><b class="mono">${value}</b></div>`).join("")}
+  function initCharts(){const severityRows=["critical","high","medium"].map(s=>[s,events.filter(e=>e.severity===s).length,s==="critical"?"#ff5c7c":s==="high"?"#ffc766":"#42d9ff"]);const blockRows=Array.from({length:10},(_,i)=>["-"+(9-i)*5+"m",70+Math.floor(rnd()*42),"#6affb4"]);const coverageRows=[["pickle",93,"#ff5c7c"],["safetensors",88,"#42d9ff"],["onnx",79,"#a995ff"],["skops",71,"#ffc766"],["metadata",84,"#6affb4"]];if(window.__chartFailed||!window.Chart){fallbackBars("severityFallback",severityRows);fallbackBars("blocksFallback",blockRows);fallbackBars("coverageFallback",coverageRows);$("cdnStatus").textContent="Chart.js unavailable; HTML fallback charts active.";return}$("cdnStatus").textContent="Three.js and Chart.js loaded from CDN.";const theme=chartTheme();chartRefs=[new Chart($("severityChart"),{type:"doughnut",data:{labels:severityRows.map(r=>r[0]),datasets:[{data:severityRows.map(r=>r[1]),backgroundColor:severityRows.map(r=>r[2]),borderColor:"rgba(5,7,11,.95)",borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#d9e8f7",boxWidth:10}}}}}),new Chart($("blocksChart"),{type:"line",data:{labels:blockRows.map(r=>r[0]),datasets:[{label:"blocked",data:blockRows.map(r=>r[1]),borderColor:"#6affb4",backgroundColor:"rgba(106,255,180,.13)",fill:true,tension:.38,pointRadius:2}]},options:theme}),new Chart($("coverageChart"),{type:"bar",data:{labels:coverageRows.map(r=>r[0]),datasets:[{label:"coverage %",data:coverageRows.map(r=>r[1]),backgroundColor:coverageRows.map(r=>r[2])}]},options:theme})]}
+  function supportsWebGL(canvas){try{return !!(window.WebGLRenderingContext&&(canvas.getContext("webgl")||canvas.getContext("experimental-webgl")))}catch(e){return false}}
+  function initFallbackMap(reason){const host=$("fallbackMap");host.classList.add("active");$("sceneStatus").textContent="Fallback threat map active";$("webglStatus").textContent=reason;$("webglTrend").textContent="fallback";$("webglTrend").classList.add("warn");$("warning").textContent=reason+". The dashboard remains usable with CSS fallback rendering.";$("warning").classList.add("active");const points=[[21,30],[32,54],[45,24],[56,65],[69,34],[80,56],[51,45],[73,21]];host.innerHTML=points.map((p,i)=>`<i class="fallback-node" style="left:${p[0]}%;top:${p[1]}%;animation-delay:${i*.18}s"></i><i class="fallback-link" style="left:${p[0]}%;top:${p[1]}%;width:${140+i*18}px;--angle:${-35+i*19}deg;animation-delay:${i*.28}s"></i>`).join("")}
+  function initScene(){const canvas=$("threatScene");if(window.__threeFailed||!window.THREE){initFallbackMap("Three.js CDN unavailable");return}if(!supportsWebGL(canvas)){initFallbackMap("WebGL unavailable");return}try{const THREE=window.THREE;const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:"high-performance"});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(46,1,.1,100);camera.position.set(0,1.55,6.1);scene.add(new THREE.AmbientLight(0x7fa8c8,.8));const key=new THREE.PointLight(0x42d9ff,2.2,18);key.position.set(-4,3,4);scene.add(key);const hot=new THREE.PointLight(0xff5c7c,1.4,14);hot.position.set(4,-2,3);scene.add(hot);const group=new THREE.Group();scene.add(group);const globe=new THREE.Mesh(new THREE.SphereGeometry(1.55,64,32),new THREE.MeshStandardMaterial({color:0x111b28,metalness:.22,roughness:.5,transparent:true,opacity:.72}));group.add(globe);group.add(new THREE.Mesh(new THREE.SphereGeometry(1.565,32,16),new THREE.MeshBasicMaterial({color:0x42d9ff,wireframe:true,transparent:true,opacity:.16})));const ringMat=new THREE.MeshBasicMaterial({color:0x42d9ff,transparent:true,opacity:.18,side:THREE.DoubleSide});for(let i=0;i<3;i++){const ring=new THREE.Mesh(new THREE.RingGeometry(1.85+i*.34,1.855+i*.34,128),ringMat);ring.rotation.x=Math.PI/2+(i*.26);ring.rotation.y=i*.35;group.add(ring)}const nodeMat={trusted:new THREE.MeshBasicMaterial({color:0x6affb4}),warn:new THREE.MeshBasicMaterial({color:0xffc766}),hot:new THREE.MeshBasicMaterial({color:0xff5c7c}),cdn:new THREE.MeshBasicMaterial({color:0x42d9ff})};const coords=[[-122,37,"trusted"],[-74,40,"trusted"],[-3,51,"warn"],[13,52,"cdn"],[77,28,"hot"],[103,1,"warn"],[139,35,"trusted"],[151,-33,"cdn"],[28,-26,"hot"],[-46,-23,"warn"]];const toVec=(lon,lat,r=1.72)=>{const phi=(90-lat)*Math.PI/180,theta=(lon+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta))};const nodes=coords.map(c=>{const m=new THREE.Mesh(new THREE.SphereGeometry(c[2]==="hot"?0.065:0.048,18,12),nodeMat[c[2]]);m.position.copy(toVec(c[0],c[1]));m.userData.kind=c[2];group.add(m);return m});for(let i=0;i<nodes.length;i++){const a=nodes[i].position,b=nodes[(i+3)%nodes.length].position,mid=a.clone().add(b).multiplyScalar(.5).normalize().multiplyScalar(2.45+rnd()*.55);const curve=new THREE.CatmullRomCurve3([a,mid,b]);const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(42)),new THREE.LineBasicMaterial({color:i%3===0?0xff5c7c:0x42d9ff,transparent:true,opacity:.42}));group.add(line)}const stars=new THREE.Points(new THREE.BufferGeometry().setAttribute("position",new THREE.Float32BufferAttribute(Array.from({length:900},()=> (rnd()-.5)*18),3)),new THREE.PointsMaterial({color:0x89a7cd,size:.012,transparent:true,opacity:.42}));scene.add(stars);sceneState={renderer,scene,camera,group,nodes,stars};$("sceneStatus").textContent="WebGL threat graph live";$("webglStatus").textContent="Three.js renderer active";$("webglTrend").textContent="active";resizeScene();animateScene()}catch(e){initFallbackMap("WebGL initialization failed")}}
+  function resizeScene(){if(!sceneState)return;const {renderer,camera}=sceneState,w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+  function animateScene(){if(!sceneState)return;const t=performance.now()/1000,{renderer,scene,camera,group,nodes,stars}=sceneState;group.rotation.y=t*.09;group.rotation.x=Math.sin(t*.22)*.08;stars.rotation.y=-t*.015;nodes.forEach((n,i)=>{const s=1+Math.sin(t*2.4+i)*.18;n.scale.setScalar(s)});renderer.render(scene,camera);requestAnimationFrame(animateScene)}
+  function stream(){visible.unshift(events[Math.floor(rnd()*events.length)]);visible=visible.slice(0,34);renderMetrics();renderQueue();renderFeed();renderMatrix();chartRefs.forEach(ch=>{ch.data.datasets.forEach(ds=>{ds.data=ds.data.map(v=>Math.max(1,Math.round((Number(v)+rnd()*8-3)*10)/10))});ch.update("none")})}
+  function init(){renderMetrics();renderStages();renderQueue();renderFeed();renderMatrix();initScene();initCharts();$("search").addEventListener("input",()=>{renderFeed();renderQueue()});window.addEventListener("resize",resizeScene);setInterval(()=>{$("clock").textContent=new Date().toISOString().slice(11,19)+" UTC"},1000);setInterval(stream,2400);$("clock").textContent=new Date().toISOString().slice(11,19)+" UTC"}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+</body>
+</html>
+

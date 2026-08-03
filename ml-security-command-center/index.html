@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Security Command Center — Operations Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f1219; color: #e2e8f0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; min-height: 100vh; }
+a { color: #818cf8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Header */
+.header { background: #1a1f2e; border-bottom: 1px solid #2d3748; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 18px; font-weight: 700; }
+.header h1 span { color: #818cf8; }
+.header-right { display: flex; align-items: center; gap: 20px; font-size: 12px; color: #94a3b8; }
+.header-right .live-indicator { display: flex; align-items: center; gap: 6px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* Aggregate Stats Bar */
+.stats-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 20px 24px; background: #141820; border-bottom: 1px solid #2d3748; }
+.stat-card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; padding: 16px; text-align: center; }
+.stat-card .stat-value { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+.stat-card .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card.critical .stat-value { color: #ef4444; }
+.stat-card.warning .stat-value { color: #f59e0b; }
+.stat-card.healthy .stat-value { color: #10b981; }
+.stat-card.info .stat-value { color: #6366f1; }
+
+/* Main Grid */
+.main { display: grid; grid-template-columns: 1fr 380px; gap: 0; min-height: calc(100vh - 180px); }
+.left-col { padding: 20px 24px; overflow-y: auto; }
+.right-col { background: #141820; border-left: 1px solid #2d3748; padding: 20px; overflow-y: auto; }
+
+/* Section Headers */
+.section-header { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+.section-header .badge { background: #2d3748; border-radius: 10px; padding: 2px 8px; font-size: 11px; color: #e2e8f0; }
+
+/* Product Status Grid */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.product-tile { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; cursor: default; }
+.product-tile:hover { border-color: #475569; }
+.product-tile .status-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.status-green { background: #10b981; box-shadow: 0 0 6px #10b98155; }
+.status-yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b55; }
+.status-red { background: #ef4444; box-shadow: 0 0 6px #ef444455; }
+.product-tile .tile-content { flex: 1; min-width: 0; }
+.product-tile .tile-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-tile .tile-desc { font-size: 11px; color: #64748b; margin-bottom: 8px; }
+.product-tile .tile-metrics { display: flex; gap: 12px; font-size: 11px; }
+.product-tile .tile-metrics .metric { display: flex; flex-direction: column; }
+.product-tile .tile-metrics .metric .m-val { font-weight: 700; font-size: 14px; }
+.product-tile .tile-metrics .metric .m-label { color: #64748b; font-size: 9px; text-transform: uppercase; }
+.product-tile .tile-link { font-size: 11px; margin-top: 6px; display: inline-block; }
+
+/* Alerts Section */
+.alerts-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+.alert-item { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 6px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; }
+.alert-item .alert-sev { width: 6px; min-height: 32px; border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+.sev-critical { background: #ef4444; }
+.sev-high { background: #f97316; }
+.sev-medium { background: #f59e0b; }
+.sev-low { background: #6366f1; }
+.alert-item .alert-body { flex: 1; }
+.alert-item .alert-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.alert-item .alert-meta { font-size: 10px; color: #64748b; display: flex; gap: 12px; }
+.alert-item .alert-time { font-size: 10px; color: #475569; white-space: nowrap; margin-left: auto; }
+
+/* Right Column: Quick Links & Coverage */
+.quick-links { margin-bottom: 24px; }
+.quick-links a { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 6px; font-size: 12px; color: #e2e8f0; transition: background 0.15s; }
+.quick-links a:hover { background: #1a1f2e; text-decoration: none; }
+.quick-links a .ql-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+
+/* Coverage Matrix Mini */
+.coverage-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 4px; }
+.cov-cell { background: #1a1f2e; border-radius: 4px; padding: 4px; text-align: center; font-size: 9px; border: 1px solid #2d3748; }
+.cov-cell.cov-full { background: #064e3b; border-color: #10b981; color: #6ee7b7; }
+.cov-cell.cov-partial { background: #422006; border-color: #f59e0b; color: #fcd34d; }
+.cov-cell.cov-none { background: #1a1f2e; border-color: #2d3748; color: #475569; }
+
+/* Detection Metrics Chart Area */
+.metrics-chart { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px; padding: 16px; margin-bottom: 28px; }
+.metrics-chart .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 100px; margin-top: 12px; }
+.metrics-chart .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.metrics-chart .bar { width: 100%; border-radius: 3px 3px 0 0; transition: height 0.3s; }
+.metrics-chart .bar-label { font-size: 8px; color: #64748b; writing-mode: vertical-rl; text-orientation: mixed; max-height: 60px; overflow: hidden; }
+
+@media (max-width: 1200px) {
+  .main { grid-template-columns: 1fr; }
+  .right-col { border-left: none; border-top: 1px solid #2d3748; }
+  .stats-bar { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .product-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1><span>&#9632;</span> ML Security Command Center <span style="font-size:12px;color:#64748b;font-weight:400;">— Operations</span></h1>
+  <div class="header-right">
+    <div class="live-indicator"><span class="live-dot"></span> Live</div>
+    <span id="clock"></span>
+    <a href="../index.html" style="font-size:11px;">&#8592; 3D View</a>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="main">
+  <div class="left-col">
+    <div class="section-header">Product Status <span class="badge" id="product-count">11 products</span></div>
+    <div class="product-grid" id="product-grid"></div>
+
+    <div class="section-header">Aggregate Detection Metrics (24h)</div>
+    <div class="metrics-chart" id="metrics-chart">
+      <div style="font-size:11px;color:#94a3b8;">Detections by product — last 24 hours</div>
+      <div class="chart-bars" id="chart-bars"></div>
+    </div>
+
+    <div class="section-header">Recent Findings &amp; Alerts <span class="badge" id="alert-count">0</span></div>
+    <div class="alerts-list" id="alerts-list"></div>
+  </div>
+
+  <div class="right-col">
+    <div class="section-header">Quick Links</div>
+    <div class="quick-links" id="quick-links"></div>
+
+    <div class="section-header" style="margin-top:20px;">ATT&amp;CK v19 Coverage</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:10px;">
+      <span style="color:#6ee7b7;">&#9632;</span> Full (3+ products) &nbsp;
+      <span style="color:#fcd34d;">&#9632;</span> Partial (1-2) &nbsp;
+      <span style="color:#475569;">&#9632;</span> Gap
+    </div>
+    <div class="coverage-mini" id="coverage-grid"></div>
+  </div>
+</div>
+
+<script>
+// Product definitions with operational data
+const PRODUCTS = [
+  { id:'hf-model-provenance-scanner', name:'HF Model Scanner', desc:'Model supply-chain scanning (pickle, typosquat, unsigned weights)', status:'green', uptime:99.97, scansToday:4821, threatsBlocked:23, detectionRate:98.2, techniques:['T1195.001','T1683','T1683/001','T1027/018','T1685'], category:'Supply Chain', color:'#22d3ee', repo:'https://github.com/poojakira/hf-model-provenance-scanner', port:8001 },
+  { id:'mcp-security-gateway-monitor', name:'MCP Gateway', desc:'MCP tool-call firewall — 5-layer defense (prompt injection, auth bypass, tool abuse)', status:'green', uptime:99.99, scansToday:18420, threatsBlocked:147, detectionRate:99.1, techniques:['T1684','T1687','T1685','T1689'], category:'Runtime', color:'#a78bfa', repo:'https://github.com/poojakira/mcp-security-gateway-monitor', port:8002 },
+  { id:'llm-redteam-framework', name:'LLM Red Team', desc:'Adversarial prompt generation + detection (jailbreak, hallucination, refusal bypass)', status:'green', uptime:99.94, scansToday:7650, threatsBlocked:89, detectionRate:96.8, techniques:['T1685','T1682','T1684','T1689'], category:'Runtime', color:'#a78bfa', repo:'https://github.com/poojakira/llm-redteam-framework', port:8003 },
+  { id:'adversarial-ml-lab', name:'Adversarial ML Lab', desc:'FGSM/PGD/C&W attacks + certified defense evaluation (Randomized Smoothing)', status:'green', uptime:99.91, scansToday:3200, threatsBlocked:41, detectionRate:94.5, techniques:['T1685','T1682','T1689'], category:'Runtime', color:'#a78bfa', repo:'https://github.com/poojakira/adversarial-ml-lab', port:8004 },
+  { id:'dataset-poisoning-detector', name:'Poisoning Detector', desc:'Spectral signature + influence function detectors for label-flip, backdoor, gradient', status:'yellow', uptime:98.5, scansToday:1890, threatsBlocked:12, detectionRate:87.3, techniques:['T1685','T1688'], category:'Data Security', color:'#34d399', repo:'https://github.com/poojakira/dataset-poisoning-detector', port:8005 },
+  { id:'model-privacy-attacks', name:'Privacy Attacks', desc:'Membership inference, model extraction, differential privacy bypass detection', status:'green', uptime:99.88, scansToday:2640, threatsBlocked:34, detectionRate:91.7, techniques:['T1685','T1689','T1682'], category:'Privacy', color:'#34d399', repo:'https://github.com/poojakira/model-privacy-attacks', port:8006 },
+  { id:'PulseNet-RUL-Forecasting', name:'PulseNet ICS', desc:'ICS ATT&CK v19 for industrial RUL forecasting (13 new ICS sub-techniques)', status:'green', uptime:99.95, scansToday:960, threatsBlocked:5, detectionRate:97.1, techniques:['T1691','T1692','T1693','T1694','T1695','T0843','T0873','T0846'], category:'ICS/OT', color:'#fb923c', repo:'https://github.com/poojakira/PulseNet-RUL-Forecasting', port:8007 },
+  { id:'attack-v19-core', name:'ATT&CK v19 Core', desc:'Canonical MITRE ATT&CK v19 data models — 222 techniques, 475 subs, TA0112', status:'green', uptime:100, scansToday:0, threatsBlocked:0, detectionRate:100, techniques:['TA0005','TA0112'], category:'Infrastructure', color:'#fb923c', repo:'https://github.com/poojakira/attack-v19-core', port:null },
+  { id:'attack-detection-engine', name:'Detection Engine', desc:'5-source telemetry pipeline (logs, traffic, behavior, EDR, code) → ATT&CK mappings', status:'green', uptime:99.96, scansToday:12300, threatsBlocked:67, detectionRate:95.4, techniques:['T1685','T1683','T1684'], category:'Infrastructure', color:'#fb923c', repo:'https://github.com/poojakira/attack-detection-engine', port:8008 },
+  { id:'aws-agent-identity-guard', name:'AWS Agent Guard', desc:'IAM guardrails for AI agents — role boundary enforcement', status:'yellow', uptime:99.2, scansToday:5420, threatsBlocked:31, detectionRate:93.8, techniques:['T1078','T1098','T1548'], category:'Cloud', color:'#38bdf8', repo:'https://github.com/poojakira/aws-agent-identity-guard', port:8009 },
+  { id:'unified-ml-security-platform', name:'Unified Platform', desc:'Docker Compose orchestration — aggregates all detectors + CTI intel', status:'green', uptime:99.93, scansToday:0, threatsBlocked:0, detectionRate:100, techniques:['T1685','T1683','T1684','T1687','T1689'], category:'Platform', color:'#fb923c', repo:'https://github.com/poojakira/unified-ml-security-platform', port:8000 }
+];
+
+// Simulated recent alerts
+const ALERTS = [
+  { sev:'critical', title:'Pickle deserialization exploit detected in model upload', source:'HF Model Scanner', technique:'T1027/018', time:'2 min ago' },
+  { sev:'high', title:'Prompt injection attempt blocked — tool_call override via system prompt', source:'MCP Gateway', technique:'T1684', time:'5 min ago' },
+  { sev:'high', title:'Membership inference attack detected against production model', source:'Privacy Attacks', technique:'T1689', time:'8 min ago' },
+  { sev:'medium', title:'Elevated IAM privilege escalation attempt by agent role', source:'AWS Agent Guard', technique:'T1548', time:'12 min ago' },
+  { sev:'medium', title:'PGD adversarial perturbation detected on input batch', source:'Adversarial ML Lab', technique:'T1685', time:'15 min ago' },
+  { sev:'medium', title:'Spectral anomaly in training batch — possible label-flip', source:'Poisoning Detector', technique:'T1688', time:'22 min ago' },
+  { sev:'low', title:'Model provenance signature refresh completed', source:'HF Model Scanner', technique:'T1683/001', time:'30 min ago' },
+  { sev:'low', title:'New ICS sub-technique T1692/002 pattern added', source:'PulseNet ICS', technique:'T1692', time:'45 min ago' },
+  { sev:'critical', title:'Jailbreak bypass chain detected — multi-turn conversation', source:'LLM Red Team', technique:'T1682', time:'1h ago' },
+  { sev:'high', title:'Tool abuse: unauthorized data exfiltration via MCP tool call', source:'MCP Gateway', technique:'T1687', time:'1h ago' }
+];
+
+// Render stats bar
+function renderStats() {
+  const totalScans = PRODUCTS.reduce((s,p) => s + p.scansToday, 0);
+  const totalThreats = PRODUCTS.reduce((s,p) => s + p.threatsBlocked, 0);
+  const avgDetection = (PRODUCTS.filter(p=>p.scansToday>0).reduce((s,p) => s + p.detectionRate, 0) / PRODUCTS.filter(p=>p.scansToday>0).length).toFixed(1);
+  const healthyCount = PRODUCTS.filter(p => p.status==='green').length;
+  const critAlerts = ALERTS.filter(a => a.sev==='critical').length;
+
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-card healthy"><div class="stat-value">${healthyCount}/${PRODUCTS.length}</div><div class="stat-label">Products Healthy</div></div>
+    <div class="stat-card info"><div class="stat-value">${totalScans.toLocaleString()}</div><div class="stat-label">Scans Today</div></div>
+    <div class="stat-card critical"><div class="stat-value">${totalThreats}</div><div class="stat-label">Threats Blocked</div></div>
+    <div class="stat-card warning"><div class="stat-value">${avgDetection}%</div><div class="stat-label">Avg Detection Rate</div></div>
+    <div class="stat-card critical"><div class="stat-value">${critAlerts}</div><div class="stat-label">Critical Alerts</div></div>
+  `;
+}
+
+// Render product grid
+function renderProducts() {
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = PRODUCTS.map(p => `
+    <div class="product-tile">
+      <div class="status-dot status-${p.status}"></div>
+      <div class="tile-content">
+        <div class="tile-name" style="color:${p.color}">${p.name}</div>
+        <div class="tile-desc">${p.desc}</div>
+        <div class="tile-metrics">
+          <div class="metric"><span class="m-val" style="color:#10b981">${p.uptime}%</span><span class="m-label">Uptime</span></div>
+          <div class="metric"><span class="m-val">${p.scansToday.toLocaleString()}</span><span class="m-label">Scans</span></div>
+          <div class="metric"><span class="m-val" style="color:#ef4444">${p.threatsBlocked}</span><span class="m-label">Blocked</span></div>
+          <div class="metric"><span class="m-val" style="color:#6366f1">${p.detectionRate}%</span><span class="m-label">Detect</span></div>
+        </div>
+        <a class="tile-link" href="${p.repo}" target="_blank">&#x2197; GitHub</a>
+        ${p.port ? `<a class="tile-link" href="http://localhost:${p.port}" target="_blank" style="margin-left:12px;">&#9881; Dashboard</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// Render alerts
+function renderAlerts() {
+  const list = document.getElementById('alerts-list');
+  document.getElementById('alert-count').textContent = ALERTS.length;
+  list.innerHTML = ALERTS.map(a => `
+    <div class="alert-item">
+      <div class="alert-sev sev-${a.sev}"></div>
+      <div class="alert-body">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-meta">
+          <span>${a.source}</span>
+          <span style="color:#818cf8;">${a.technique}</span>
+          <span>${a.sev.toUpperCase()}</span>
+        </div>
+      </div>
+      <span class="alert-time">${a.time}</span>
+    </div>
+  `).join('');
+}
+
+// Render detection metrics chart
+function renderChart() {
+  const container = document.getElementById('chart-bars');
+  const maxScans = Math.max(...PRODUCTS.map(p => p.scansToday));
+  container.innerHTML = PRODUCTS.filter(p => p.scansToday > 0).map(p => {
+    const h = Math.max(4, (p.scansToday / maxScans) * 90);
+    return `<div class="bar-col">
+      <div class="bar" style="height:${h}px;background:${p.color};opacity:0.85;" title="${p.name}: ${p.scansToday} scans, ${p.threatsBlocked} threats"></div>
+      <div class="bar-label">${p.name.split(' ')[0]}</div>
+    </div>`;
+  }).join('');
+}
+
+// Render quick links
+function renderLinks() {
+  const el = document.getElementById('quick-links');
+  const links = [
+    { label:'API Gateway (FastAPI)', url:'http://localhost:8000/docs', icon:'&#9889;', bg:'#4f46e5' },
+    { label:'Streamlit Dashboard', url:'http://localhost:8501', icon:'&#9635;', bg:'#0891b2' },
+    { label:'Prometheus Metrics', url:'http://localhost:9090', icon:'&#9776;', bg:'#d97706' },
+    { label:'Grafana Dashboards', url:'http://localhost:3000', icon:'&#9673;', bg:'#059669' },
+    { label:'3D Visualization', url:'../index.html', icon:'&#9830;', bg:'#7c3aed' },
+    { label:'ATT&CK Navigator Layer', url:'https://mitre-attack.github.io/attack-navigator/', icon:'&#9733;', bg:'#dc2626' }
+  ];
+  el.innerHTML = links.map(l => `
+    <a href="${l.url}" target="_blank">
+      <span class="ql-icon" style="background:${l.bg}">${l.icon}</span>
+      ${l.label}
+    </a>
+  `).join('');
+}
+
+// Render ATT&CK coverage grid
+function renderCoverage() {
+  const allTechs = [...new Set(PRODUCTS.flatMap(p => p.techniques))].sort();
+  const grid = document.getElementById('coverage-grid');
+  grid.innerHTML = allTechs.map(t => {
+    const count = PRODUCTS.filter(p => p.techniques.includes(t)).length;
+    const cls = count >= 3 ? 'cov-full' : count >= 1 ? 'cov-partial' : 'cov-none';
+    return `<div class="cov-cell ${cls}" title="${t} — ${count} product(s)">${t}</div>`;
+  }).join('');
+}
+
+// Clock
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }) + ' UTC';
+}
+
+// Initialize
+renderStats();
+renderProducts();
+renderAlerts();
+renderChart();
+renderLinks();
+renderCoverage();
+updateClock();
+setInterval(updateClock, 1000);
+
+// Simulate live updates every 10s
+setInterval(() => {
+  PRODUCTS.forEach(p => {
+    if (p.scansToday > 0) {
+      p.scansToday += Math.floor(Math.random() * 20);
+      p.threatsBlocked += Math.random() > 0.7 ? 1 : 0;
+    }
+  });
+  renderStats();
+  renderChart();
+}, 10000);
+</script>
+</body>
+</html>
