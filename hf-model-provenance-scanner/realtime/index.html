@@ -139,8 +139,25 @@ h1{font-size:18px;line-height:1.1;font-weight:800;white-space:nowrap;overflow:hi
 @media(max-width:760px){.topbar{grid-template-columns:1fr;align-items:stretch}.status-strip{justify-content:flex-start;overflow:auto}.search{width:100%;min-width:0}.workspace{padding:10px;grid-template-columns:1fr;grid-template-areas:"center" "left" "right" "bottom"}.bottom-dock{grid-template-columns:1fr}.scene-readout{grid-template-columns:1fr}.matrix-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.scene-panel{min-height:360px}.feed-row{grid-template-columns:58px 76px minmax(0,1fr)}h1{font-size:16px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 </style>
+
+<link rel="stylesheet" href="../../shared/design-system.css">
+<style>
+.ds-nav { z-index: 9999; }
+body { padding-top: 0 !important; }
+</style>
 </head>
 <body>
+<nav class="ds-nav"><a class="ds-nav-back" href="../../"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>All dashboards</a><div class="ds-nav-sep"></div><div class="ds-nav-title">HF Provenance Scanner — Realtime SOC</div><a href="../security/" class="ds-nav-badge evidence" style="text-decoration:none">Security ops →</a></nav>
+
+<nav class="ds-nav">
+  <a class="ds-nav-back" href="../../">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+    All dashboards
+  </a>
+  <div class="ds-nav-sep"></div>
+  <div class="ds-nav-title">HF Model Provenance Scanner — Realtime SOC</div>
+  <a href="../security/" class="ds-nav-badge evidence" style="text-decoration:none">Security ops →</a>
+</nav>
 <div id="sceneHost">
   <canvas id="threatScene" aria-label="3D cyber supply chain threat map"></canvas>
   <div id="fallbackMap" class="fallback-map" aria-hidden="true"></div>
@@ -210,4 +227,8 @@ h1{font-size:18px;line-height:1.1;font-weight:800;white-space:nowrap;overflow:hi
 </script>
 </body>
 </html>
+
+
+
+
 

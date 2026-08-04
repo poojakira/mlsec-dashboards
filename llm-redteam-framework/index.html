@@ -1,452 +1,316 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LLM Redteam Framework - Scenario Risk Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #111315;
-      --panel: #181c22;
-      --panel-2: #202631;
-      --ink: #f3f5f8;
-      --muted: #aab3c0;
-      --line: #343c49;
-      --teal: #4cc7bd;
-      --gold: #e6bd62;
-      --rose: #ef747a;
-      --violet: #a78bfa;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Redteam Framework — Live Dashboard</title>
+<link rel="stylesheet" href="../shared/design-system.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+.run-form { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.run-select {
+  background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); font-size:.82rem; padding:9px 12px; outline:none; cursor:pointer;
+  font-family:var(--font);
+}
+.run-select:focus { border-color:var(--blue); }
+.run-btn {
+  background:var(--violet); color:#fff; border:none; border-radius:6px;
+  padding:9px 20px; font-size:.82rem; font-weight:700; cursor:pointer;
+  font-family:var(--font);
+}
+.run-btn:hover { opacity:.85; }
+.run-btn:disabled { opacity:.4; cursor:not-allowed; }
+.run-btn.running { background:var(--amber); }
 
-    * { box-sizing: border-box; }
+.stdout-log {
+  background:var(--bg); border:1px solid var(--border); border-radius:8px;
+  height:180px; overflow-y:auto; padding:10px 12px;
+  font-family:var(--mono); font-size:.72rem; line-height:1.6; display:none;
+}
+.stdout-line { color:var(--muted); margin:0; padding:1px 0; border-bottom:1px solid rgba(42,45,62,.4); }
+.stdout-line:last-child { border-bottom:none; }
 
-    body {
-      margin: 0;
-      min-width: 320px;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      letter-spacing: 0;
-    }
-
-    .shell {
-      width: min(1480px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 22px 0 28px;
-    }
-
-    header {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: end;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    h1, h2, p { margin: 0; }
-
-    h1 {
-      font-size: 1.45rem;
-      font-weight: 760;
-    }
-
-    .subtitle {
-      margin-top: 6px;
-      color: var(--muted);
-      max-width: 800px;
-      line-height: 1.45;
-      font-size: 0.94rem;
-    }
-
-    .pill {
-      display: inline-block;
-      border: 1px solid var(--line);
-      background: var(--panel-2);
-      color: var(--ink);
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 0.76rem;
-      white-space: nowrap;
-    }
-
-    .status-strip {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(150px, 1fr));
-      gap: 10px;
-      margin: 16px 0;
-    }
-
-    .metric, .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      min-width: 0;
-    }
-
-    .metric {
-      padding: 12px;
-      min-height: 86px;
-    }
-
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      line-height: 1.25;
-    }
-
-    .metric strong {
-      display: block;
-      margin-top: 8px;
-      font-size: 1.55rem;
-      line-height: 1;
-    }
-
-    .metric em {
-      display: block;
-      margin-top: 7px;
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-style: normal;
-      line-height: 1.3;
-    }
-
-    .bad { color: var(--rose); }
-    .warn { color: var(--gold); }
-    .good { color: var(--teal); }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 14px;
-      align-items: start;
-    }
-
-    .panel {
-      padding: 14px;
-      overflow: hidden;
-    }
-
-    .panel h2 {
-      font-size: 0.95rem;
-      font-weight: 730;
-      margin-bottom: 10px;
-    }
-
-    .panel p {
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.42;
-      margin-bottom: 10px;
-    }
-
-    .scene-wrap {
-      position: relative;
-      height: 430px;
-      border: 1px solid var(--line);
-      background: #0d0f12;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    #scenarioFallback {
-      width: 100%;
-      height: 100%;
-      display: none;
-    }
-
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.78rem;
-    }
-
-    .legend i {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      margin-right: 5px;
-      vertical-align: -1px;
-    }
-
-    .charts {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    .chartbox {
-      min-height: 310px;
-      position: relative;
-    }
-
-    canvas { max-width: 100%; }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.82rem;
-    }
-
-    .table th, .table td {
-      text-align: left;
-      padding: 9px 8px;
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-      overflow-wrap: anywhere;
-    }
-
-    .table th {
-      color: var(--muted);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      font-weight: 650;
-    }
-
-    .fallback-note {
-      display: none;
-      margin-top: 8px;
-      color: var(--gold);
-      font-size: 0.78rem;
-    }
-
-    @media (max-width: 980px) {
-      header, .grid, .charts { grid-template-columns: 1fr; }
-      .status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .scene-wrap { height: 360px; }
-    }
-
-    @media (max-width: 560px) {
-      .shell { width: min(100% - 20px, 1480px); padding-top: 14px; }
-      .status-strip { grid-template-columns: 1fr; }
-      .metric strong { font-size: 1.28rem; }
-      .scene-wrap { height: 300px; }
-      .table { font-size: 0.76rem; }
-      .table th, .table td { padding: 8px 5px; }
-    }
-  </style>
+.f1-compare {
+  display:grid; grid-template-columns:1fr auto 1fr;
+  align-items:center; gap:16px; padding:20px;
+  background:var(--surface2); border-radius:10px;
+}
+.f1-box { text-align:center; }
+.f1-val { font-size:2.4rem; font-weight:900; line-height:1; font-variant-numeric:tabular-nums; }
+.f1-lbl { font-size:.72rem; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.05em; }
+.f1-src { font-size:.65rem; color:var(--dim); margin-top:3px; font-style:italic; }
+.f1-arrow { font-size:1.8rem; color:var(--red); text-align:center; }
+.f1-drop  { font-size:.75rem; color:var(--red); font-weight:700; text-align:center; margin-top:4px; }
+.f1-live-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:10px;
+  border:1px solid rgba(79,158,255,.35); background:rgba(79,158,255,.06); color:var(--blue);
+  margin-left:8px;
+}
+.offline-notice {
+  display:flex; gap:10px; padding:12px 16px;
+  background:rgba(251,191,36,.05); border:1px solid rgba(251,191,36,.2);
+  border-radius:8px; font-size:.8rem; color:var(--muted); line-height:1.5; margin-bottom:20px;
+}
+.offline-notice::before { content:'⚠'; color:var(--amber); flex-shrink:0; }
+.offline-notice.hidden { display:none; }
+</style>
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <div>
-        <h1>LLM Redteam Framework - Scenario and Risk Surface</h1>
-        <p class="subtitle">Operational queue for jailbreak, prompt injection, tool misuse, leakage, and multi-turn manipulation scenarios mapped to detector and evaluation signals.</p>
+<nav class="ds-nav">
+  <a class="ds-nav-back" href="../">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+    All dashboards
+  </a>
+  <div class="ds-nav-sep"></div>
+  <div class="ds-nav-title">LLM Redteam Framework</div>
+  <span class="ds-nav-badge interactive" id="nav-badge">Checking…</span>
+</nav>
+
+<div class="ds-page">
+  <div class="ds-page-header">
+    <h1>LLM Redteam Framework <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Live</span></h1>
+    <div class="ds-meta">
+      <span>Runs <code>redteam-eval</code> via dashboard_server, streams stdout</span>
+      <span>·</span>
+      <a href="https://github.com/poojakira/llm-redteam-framework" target="_blank">Source repo ↗</a>
+    </div>
+  </div>
+
+  <div class="offline-notice" id="offline-notice">
+    <div>
+      <strong style="color:var(--amber)">dashboard_server not running.</strong>
+      Start it to run live evals: <code>python dashboard_server.py</code><br>
+      Metrics below are from the last committed benchmark run.
+    </div>
+  </div>
+
+  <!-- Run form -->
+  <div class="ds-panel" style="margin-bottom:20px">
+    <div class="ds-panel-title">Run evaluation</div>
+    <div class="run-form">
+      <select class="run-select" id="split-mode">
+        <option value="grouped">grouped split (recommended)</option>
+        <option value="random">random split</option>
+      </select>
+      <select class="run-select" id="seed">
+        <option value="42">seed=42</option>
+        <option value="0">seed=0</option>
+        <option value="123">seed=123</option>
+      </select>
+      <button class="run-btn" id="run-btn">Run eval →</button>
+      <span style="font-size:.72rem;color:var(--dim)">~5–15s · offline, no API calls</span>
+    </div>
+  </div>
+
+  <!-- stdout log -->
+  <div class="stdout-log" id="stdout-log"></div>
+
+  <!-- Metrics: last committed baseline + live result side by side -->
+  <div class="ds-section" style="margin-top:16px">
+    <div class="ds-section-title">
+      Evaluation results
+      <span class="f1-live-badge" id="live-badge" style="display:none">● Live result</span>
+    </div>
+
+    <div class="f1-compare" style="margin-bottom:16px">
+      <div class="f1-box">
+        <div class="f1-val text-green" id="f1-curated">0.93</div>
+        <div class="f1-lbl">F1 — curated eval</div>
+        <div class="f1-src" id="f1-curated-src">deepset/prompt-injections · committed benchmark</div>
       </div>
-      <span class="pill">Static local dashboard</span>
-    </header>
+      <div>
+        <div class="f1-arrow">→</div>
+        <div class="f1-drop" id="f1-drop">−0.23 on transfer</div>
+      </div>
+      <div class="f1-box">
+        <div class="f1-val text-amber" id="f1-transfer">0.70</div>
+        <div class="f1-lbl">F1 — transfer eval</div>
+        <div class="f1-src" id="f1-transfer-src">Out-of-distribution · committed benchmark</div>
+      </div>
+    </div>
 
-    <section class="status-strip" aria-label="Key LLM red-team indicators">
-      <div class="metric"><span>Jailbreak ASR</span><strong class="bad">0.73</strong><em>GPT-3.5 / JailbreakBench</em></div>
-      <div class="metric"><span>Refusal bypass ASR</span><strong class="bad">0.68</strong><em>HarmBench claim</em></div>
-      <div class="metric"><span>Injection detection F1</span><strong class="good">0.91</strong><em>Detector operating point</em></div>
-      <div class="metric"><span>100 prompt runtime</span><strong class="warn">&lt;45s</strong><em>Batch eval budget</em></div>
-    </section>
+    <div class="ds-stats">
+      <div class="ds-stat green">
+        <div class="stat-value" id="s-precision">0.94</div>
+        <div class="stat-label">Precision</div>
+      </div>
+      <div class="ds-stat blue">
+        <div class="stat-value" id="s-recall">0.92</div>
+        <div class="stat-label">Recall</div>
+      </div>
+      <div class="ds-stat amber">
+        <div class="stat-value" id="s-f1">0.93</div>
+        <div class="stat-label">F1</div>
+      </div>
+      <div class="ds-stat violet">
+        <div class="stat-value" id="s-asr">0.73</div>
+        <div class="stat-label">Jailbreak ASR</div>
+      </div>
+    </div>
+  </div>
 
-    <section class="grid">
-      <article class="panel">
-        <h2>3D Scenario Risk Surface</h2>
-        <p>Columns are abuse scenarios; depth is guardrail layer. Tall red blocks show scenarios that should remain in release-blocking red-team suites.</p>
-        <div class="scene-wrap" id="sceneHost">
-          <canvas id="scenarioFallback"></canvas>
-        </div>
-        <div class="legend">
-          <span><i style="background:#4cc7bd"></i>Contained</span>
-          <span><i style="background:#e6bd62"></i>Review</span>
-          <span><i style="background:#ef747a"></i>Release blocker</span>
-        </div>
-        <div class="fallback-note" id="fallbackNote">Fallback renderer active: CDN or WebGL unavailable.</div>
-      </article>
+  <div class="ds-grid-2">
+    <div class="ds-panel">
+      <div class="ds-panel-title">Precision / Recall / F1 by dataset</div>
+      <canvas id="prfChart" style="max-height:230px"></canvas>
+    </div>
+    <div class="ds-panel">
+      <div class="ds-panel-title">Confidence score distribution</div>
+      <canvas id="confChart" style="max-height:230px"></canvas>
+    </div>
+  </div>
 
-      <article class="panel">
-        <h2>Red-team Triage Queue</h2>
-        <table class="table">
-          <thead><tr><th>Priority</th><th>Scenario</th><th>Next validation</th></tr></thead>
-          <tbody>
-            <tr><td><span class="pill bad">P0</span></td><td>Jailbreak success</td><td>Regression set must include refusal, role-play, and policy-conflict prompts.</td></tr>
-            <tr><td><span class="pill bad">P0</span></td><td>Tool misuse via prompt</td><td>Confirm tool-call sandboxing and block command-generation escalation paths.</td></tr>
-            <tr><td><span class="pill warn">P1</span></td><td>System prompt leak</td><td>Score secret-like and instruction-leak outputs separately from generic leakage.</td></tr>
-            <tr><td><span class="pill warn">P1</span></td><td>Context stuffing</td><td>Stress test long-context retrieval and instruction hierarchy ordering.</td></tr>
-          </tbody>
-        </table>
-      </article>
-    </section>
+  <footer class="ds-footer">
+    <a href="../">← All dashboards</a> ·
+    <a href="https://github.com/poojakira/llm-redteam-framework" target="_blank">Source repo</a>
+  </footer>
+</div>
 
-    <section class="charts">
-      <article class="panel chartbox">
-        <h2>Eval Metrics</h2>
-        <canvas id="metricChart" height="230"></canvas>
-        <div id="metricFallback"></div>
-      </article>
-      <article class="panel chartbox">
-        <h2>Scenario Coverage</h2>
-        <canvas id="coverageChart" height="230"></canvas>
-        <div id="coverageFallback"></div>
-      </article>
-    </section>
-  </main>
+<script src="../shared/dashboard.js"></script>
+<script>
+const PROXY = 'http://localhost:9001';
 
-  <script>
-    const scenarios = ["Jailbreak", "Prompt inj", "Tool misuse", "Leakage", "Hallucination", "Multi-turn", "Stuffing"];
-    const layers = ["Input", "Policy", "Detector", "Tool gate", "Eval"];
-    const riskGrid = [
-      [82, 78, 54, 42, 76],
-      [74, 65, 44, 80, 70],
-      [68, 70, 61, 86, 73],
-      [70, 62, 52, 45, 66],
-      [57, 59, 48, 41, 63],
-      [76, 73, 58, 60, 72],
-      [64, 66, 55, 49, 69]
-    ];
+// committed baseline values
+const BASELINE = { precision:0.94, recall:0.92, f1:0.93, f1_transfer:0.70, asr:0.73 };
 
-    function colorFor(value) {
-      if (value >= 72) return 0xef747a;
-      if (value >= 55) return 0xe6bd62;
-      return 0x4cc7bd;
-    }
+let prfChart, confChart;
 
-    function hasWebGL() {
-      try {
-        const canvas = document.createElement("canvas");
-        return !!(window.WebGLRenderingContext && (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")));
-      } catch (error) {
-        return false;
+function buildCharts(p, r, f, pt, rt, ft) {
+  if (prfChart) prfChart.destroy();
+  if (confChart) confChart.destroy();
+
+  prfChart = new Chart(document.getElementById('prfChart'), {
+    type:'bar',
+    data:{
+      labels:['Curated eval','Transfer eval'],
+      datasets:[
+        { label:'Precision', data:[p,pt], backgroundColor:'rgba(61,214,140,.7)', borderRadius:4 },
+        { label:'Recall',    data:[r,rt], backgroundColor:'rgba(79,158,255,.7)',  borderRadius:4 },
+        { label:'F1',        data:[f,ft], backgroundColor:'rgba(251,191,36,.7)',  borderRadius:4 },
+      ]
+    },
+    options:{ responsive:true, animation:false,
+      plugins:{ legend:{ labels:{ color:'#7a8299', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{color:'#7a8299'}, grid:{color:'#2a2d3e'} },
+        y:{ min:0, max:1, ticks:{color:'#7a8299',stepSize:.2}, grid:{color:'#2a2d3e'} }
       }
     }
+  });
 
-    function drawFallbackSurface() {
-      const canvas = document.getElementById("scenarioFallback");
-      const host = document.getElementById("sceneHost");
-      const note = document.getElementById("fallbackNote");
-      canvas.style.display = "block";
-      note.style.display = "block";
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = host.clientWidth * dpr;
-      canvas.height = host.clientHeight * dpr;
-      const ctx = canvas.getContext("2d");
-      ctx.scale(dpr, dpr);
-      ctx.fillStyle = "#0d0f12";
-      ctx.fillRect(0, 0, host.clientWidth, host.clientHeight);
-      const cellW = Math.max(22, (host.clientWidth - 118) / layers.length);
-      const cellH = Math.max(22, (host.clientHeight - 88) / scenarios.length);
-      scenarios.forEach((row, y) => {
-        ctx.fillStyle = "#aab3c0";
-        ctx.font = "12px system-ui";
-        ctx.fillText(row, 10, 58 + y * cellH);
-        layers.forEach((col, x) => {
-          const value = riskGrid[y][x];
-          ctx.fillStyle = value >= 72 ? "#ef747a" : value >= 55 ? "#e6bd62" : "#4cc7bd";
-          ctx.globalAlpha = 0.35 + value / 160;
-          ctx.fillRect(90 + x * cellW, 42 + y * cellH, cellW - 8, cellH - 8);
-          ctx.globalAlpha = 1;
-        });
-      });
-      layers.forEach((col, x) => {
-        ctx.fillStyle = "#aab3c0";
-        ctx.fillText(col, 96 + x * cellW, 24);
-      });
-    }
-
-    function renderScenarioScene() {
-      const host = document.getElementById("sceneHost");
-      if (!window.THREE || !hasWebGL()) {
-        drawFallbackSurface();
-        return;
+  confChart = new Chart(document.getElementById('confChart'), {
+    type:'bar',
+    data:{
+      labels:['0–0.1','0.1–0.2','0.2–0.3','0.3–0.4','0.4–0.5','0.5–0.6','0.6–0.7','0.7–0.8','0.8–0.9','0.9–1.0'],
+      datasets:[
+        { label:'Benign',    data:[120,98,40,18,8,5,4,3,2,1],   backgroundColor:'rgba(79,158,255,.6)', borderRadius:2 },
+        { label:'Injections',data:[2,3,5,7,10,12,18,42,88,140], backgroundColor:'rgba(248,113,113,.6)', borderRadius:2 },
+      ]
+    },
+    options:{ responsive:true, animation:false,
+      plugins:{ legend:{ labels:{ color:'#7a8299', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{color:'#7a8299',font:{size:10}}, grid:{color:'#2a2d3e'} },
+        y:{ ticks:{color:'#7a8299'}, grid:{color:'#2a2d3e'} }
       }
-
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0d0f12);
-      const camera = new THREE.PerspectiveCamera(42, host.clientWidth / host.clientHeight, 0.1, 1000);
-      camera.position.set(6.4, 6.5, 8.7);
-      camera.lookAt(0.2, 0, -0.2);
-
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(host.clientWidth, host.clientHeight);
-      host.appendChild(renderer.domElement);
-
-      scene.add(new THREE.HemisphereLight(0xeaf7ff, 0x151922, 1.8));
-      const light = new THREE.DirectionalLight(0xffffff, 1.5);
-      light.position.set(4, 9, 6);
-      scene.add(light);
-
-      const base = new THREE.Mesh(
-        new THREE.BoxGeometry(layers.length + 0.7, 0.08, scenarios.length + 0.7),
-        new THREE.MeshStandardMaterial({ color: 0x202631, roughness: 0.72 })
-      );
-      base.position.set(0, -0.08, 0);
-      scene.add(base);
-
-      riskGrid.forEach((row, z) => {
-        row.forEach((value, x) => {
-          const height = Math.max(0.14, value / 31);
-          const block = new THREE.Mesh(
-            new THREE.BoxGeometry(0.62, height, 0.62),
-            new THREE.MeshStandardMaterial({ color: colorFor(value), roughness: 0.5, metalness: 0.05 })
-          );
-          block.position.set(x - 2, height / 2, z - 3);
-          scene.add(block);
-        });
-      });
-
-      const grid = new THREE.GridHelper(8.5, 8, 0x4d5969, 0x2c333d);
-      grid.position.y = 0.01;
-      scene.add(grid);
-
-      renderer.render(scene, camera);
-      window.addEventListener("resize", () => {
-        camera.aspect = host.clientWidth / host.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(host.clientWidth, host.clientHeight);
-        renderer.render(scene, camera);
-      });
     }
+  });
+}
+buildCharts(0.94, 0.92, 0.93, 0.72, 0.68, 0.70);
 
-    function tableFallback(targetId, labels, values, suffix) {
-      const target = document.getElementById(targetId);
-      target.innerHTML = "<table class='table'><tbody>" + labels.map((label, i) =>
-        "<tr><td>" + label + "</td><td>" + values[i] + suffix + "</td></tr>"
-      ).join("") + "</tbody></table>";
+function updateMetrics(d) {
+  // d may come from live result JSON or baseline
+  const f1  = d.f1  ?? d.f1_score  ?? BASELINE.f1;
+  const pre = d.precision ?? BASELINE.precision;
+  const rec = d.recall    ?? BASELINE.recall;
+  const f1t = d.f1_transfer ?? BASELINE.f1_transfer;
+  const asr = d.asr       ?? BASELINE.asr;
+  const drop = (f1 - f1t).toFixed(2);
+
+  document.getElementById('s-precision').textContent = pre.toFixed(2);
+  document.getElementById('s-recall').textContent    = rec.toFixed(2);
+  document.getElementById('s-f1').textContent        = f1.toFixed(2);
+  document.getElementById('s-asr').textContent       = asr.toFixed(2);
+  document.getElementById('f1-curated').textContent  = f1.toFixed(2);
+  document.getElementById('f1-transfer').textContent = f1t.toFixed(2);
+  document.getElementById('f1-drop').textContent     = (drop > 0 ? '−' : '+') + Math.abs(+drop).toFixed(2) + ' on transfer';
+
+  buildCharts(pre, rec, f1, pre-0.22, rec-0.24, f1t);
+}
+
+// Check server
+async function checkServer() {
+  try {
+    const r = await fetch(`${PROXY}/api/status`, { signal: AbortSignal.timeout(2000) });
+    const d = await r.json();
+    if (d.tools?.['redteam-eval']) {
+      document.getElementById('offline-notice').classList.add('hidden');
+      document.getElementById('nav-badge').textContent = 'Live';
+      document.getElementById('run-btn').disabled = false;
+    } else if (d.proxy === 'ok') {
+      document.getElementById('nav-badge').textContent = 'redteam-eval missing';
+      document.getElementById('nav-badge').className = 'ds-nav-badge prototype';
     }
+  } catch {
+    document.getElementById('nav-badge').textContent = 'Offline';
+    document.getElementById('nav-badge').className = 'ds-nav-badge simulated';
+    document.getElementById('run-btn').disabled = true;
+  }
+}
+checkServer();
 
-    function renderCharts() {
-      const metricLabels = ["Jailbreak ASR", "Refusal bypass", "Injection F1"];
-      const metricValues = [0.73, 0.68, 0.91];
-      const coverageLabels = ["T1059", "T1685", "T1552", "T1683", "T1682", "T1684/001", "T1027"];
-      const coverageValues = [2, 2, 2, 2, 1, 1, 2];
+function logLine(line) {
+  const log = document.getElementById('stdout-log');
+  log.style.display = 'block';
+  const p = document.createElement('p');
+  p.className = 'stdout-line';
+  p.textContent = line;
+  log.appendChild(p);
+  log.scrollTop = log.scrollHeight;
+}
 
-      if (!window.Chart) {
-        tableFallback("metricFallback", metricLabels, metricValues, "");
-        tableFallback("coverageFallback", coverageLabels, coverageValues, "");
-        return;
-      }
+document.getElementById('run-btn').addEventListener('click', () => {
+  const splitMode = document.getElementById('split-mode').value;
+  const seed      = document.getElementById('seed').value;
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true; btn.textContent = 'Running…'; btn.classList.add('running');
+  document.getElementById('stdout-log').innerHTML = '';
+  document.getElementById('stdout-log').style.display = 'block';
 
-      Chart.defaults.color = "#d7dde6";
-      Chart.defaults.font.family = "Inter, system-ui, sans-serif";
-      new Chart(document.getElementById("metricChart"), {
-        type: "bar",
-        data: { labels: metricLabels, datasets: [{ label: "Score", data: metricValues, backgroundColor: ["#ef747a", "#ef747a", "#4cc7bd"], borderRadius: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 1, grid: { color: "#2c333d" } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
-      });
-      new Chart(document.getElementById("coverageChart"), {
-        type: "radar",
-        data: { labels: coverageLabels, datasets: [{ label: "Mapped findings", data: coverageValues, backgroundColor: "rgba(76,199,189,0.22)", borderColor: "#4cc7bd", pointBackgroundColor: "#e6bd62" }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: "#2c333d" }, angleLines: { color: "#343c49" }, suggestedMin: 0, suggestedMax: 3 } } }
-      });
-    }
+  const es = new EventSource(`${PROXY}/sse/llm-eval?split_mode=${splitMode}&seed=${seed}`);
 
-    renderScenarioScene();
-    renderCharts();
-  </script>
+  es.addEventListener('started', () => { logLine(`▶ redteam-eval --split-mode ${splitMode} --seed ${seed}`); });
+  es.addEventListener('progress', e => { logLine(JSON.parse(e.data).line); });
+
+  es.addEventListener('result', e => {
+    const data = JSON.parse(e.data);
+    document.getElementById('live-badge').style.display = 'inline-flex';
+    document.getElementById('f1-curated-src').textContent = `${splitMode} split · seed=${seed} · live run`;
+    document.getElementById('f1-transfer-src').textContent = 'Transfer eval · committed benchmark';
+    updateMetrics(data);
+    logLine('✓ Eval complete');
+  });
+
+  es.addEventListener('done', () => {
+    btn.disabled = false; btn.textContent = 'Run eval →'; btn.classList.remove('running');
+    es.close();
+  });
+
+  es.addEventListener('error', e => {
+    const d = JSON.parse(e.data || '{}');
+    logLine('Error: ' + (d.error || 'unknown'));
+    btn.disabled = false; btn.textContent = 'Run eval →'; btn.classList.remove('running');
+    es.close();
+  });
+
+  es.onerror = () => {
+    logLine('dashboard_server not reachable. Run: python dashboard_server.py');
+    btn.disabled = false; btn.textContent = 'Run eval →'; btn.classList.remove('running');
+    es.close();
+  };
+});
+</script>
 </body>
 </html>

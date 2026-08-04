@@ -3,121 +3,589 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ML Security Platform — Live Dashboards</title>
+<title>ML Security — Interactive Evidence Dashboards</title>
+<link rel="stylesheet" href="./shared/design-system.css">
 <style>
-:root{--bg:#0a0e14;--surface:#141a22;--border:#2a3645;--text:#e8edf4;--muted:#8899aa;--blue:#4ea7ff;--teal:#32d4ba;--green:#44d17c;--amber:#ffbe4f;--red:#fa5d72;--violet:#a780ff}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Inter,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:24px;min-height:100vh}
-.container{max-width:1100px;margin:0 auto}
-h1{font-size:1.8rem;font-weight:800;margin-bottom:6px}
-.subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:32px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color 0.2s,transform 0.2s;text-decoration:none;color:var(--text);display:block}
-.card:hover{border-color:var(--blue);transform:translateY(-2px)}
-.card h3{font-size:0.95rem;margin-bottom:6px;color:var(--blue)}
-.card p{font-size:0.8rem;color:var(--muted);line-height:1.4}
-.card .tag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:12px;font-size:0.68rem;font-weight:600;border:1px solid var(--border)}
-.tag-core{color:var(--teal);border-color:rgba(50,212,186,0.3)}
-.tag-detector{color:var(--green);border-color:rgba(68,209,124,0.3)}
-.tag-infra{color:var(--violet);border-color:rgba(167,128,255,0.3)}
-.tag-gateway{color:var(--amber);border-color:rgba(255,190,79,0.3)}
-.note{margin-top:32px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;color:var(--muted)}
-.note strong{color:var(--text)}
-footer{margin-top:24px;text-align:center;color:var(--muted);font-size:0.72rem}
+body { padding-top: 0; }
+
+/* ── Hero ── */
+.hero {
+  padding: 64px 24px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,158,255,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--blue);
+  border: 1px solid rgba(79,158,255,.3);
+  background: rgba(79,158,255,.06);
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+.hero h1 span { color: var(--blue); }
+.hero-sub {
+  max-width: 560px;
+  margin: 0 auto 12px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.hero-honesty {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 600px;
+  margin: 0 auto 40px;
+  padding: 10px 16px;
+  background: rgba(251,191,36,.05);
+  border: 1px solid rgba(251,191,36,.2);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: left;
+  line-height: 1.5;
+}
+.hero-honesty::before { content: '⚠'; color: var(--amber); flex-shrink: 0; }
+.hero-honesty strong { color: var(--amber); }
+
+/* ── Featured three ── */
+.featured-label {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto 56px;
+  padding: 0 24px;
+}
+.featured-card {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.featured-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--blue));
+  opacity: 0.7;
+}
+.featured-card:hover {
+  border-color: var(--card-accent, var(--blue));
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+.featured-card .fc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--card-accent, var(--blue));
+  margin-bottom: 12px;
+}
+.featured-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.featured-card .fc-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.fc-metrics {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.fc-metric {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  flex: 1;
+  min-width: 80px;
+}
+.fc-metric .val {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--card-accent, var(--blue));
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.fc-metric .lbl {
+  font-size: 0.62rem;
+  color: var(--muted);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fc-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--card-accent, var(--blue));
+}
+.fc-cta svg { width: 14px; height: 14px; }
+
+/* Card accent overrides */
+.fc-mcp    { --card-accent: var(--amber); }
+.fc-hf     { --card-accent: var(--teal); }
+.fc-llm    { --card-accent: var(--violet); }
+
+/* ── Filter section ── */
+.all-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+.all-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.all-section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ftab {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ftab:hover { color: var(--text); border-color: var(--border2); }
+.ftab.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+.repo-card {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.repo-card:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+.repo-card.hidden { display: none; }
+.repo-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.repo-card h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+  flex: 1;
+}
+.repo-card p {
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+.repo-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.repo-type-badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+.rtype-working  { color: var(--teal);   border-color: rgba(45,212,191,.35); background: rgba(45,212,191,.06); }
+.rtype-prototype{ color: var(--amber);  border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.06); }
+.rtype-spec     { color: var(--violet); border-color: rgba(167,139,250,.35); background: rgba(167,139,250,.06); }
+.rtype-smoke    { color: var(--muted);  border-color: rgba(122,130,153,.35); background: rgba(122,130,153,.06); }
+.rtype-viz      { color: var(--dim);    border-color: rgba(74,80,104,.5);   background: rgba(74,80,104,.08); }
+.rtype-ics      { color: var(--pink);   border-color: rgba(244,114,182,.35); background: rgba(244,114,182,.06); }
+
+.repo-metric {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+/* footer */
+.site-footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--dim);
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+.site-footer a { color: var(--muted); text-decoration: none; }
+.site-footer a:hover { color: var(--blue); }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>ML Security Platform — Live Dashboards</h1>
-<p class="subtitle">Interactive evidence dashboards for 13 ML security repositories. Each shows real product data — scan results, detection metrics, benchmark performance.</p>
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-eyebrow">Interactive Evidence Dashboards</div>
+  <h1>ML Security<br><span>Interactive Evidence</span></h1>
+  <p class="hero-sub">
+    Interactive evidence dashboards for 13 ML security repositories.
+    Benchmark results, detection metrics, and gap analysis — all from actual test runs.
+  </p>
+  <div class="hero-honesty">
+    <strong>Honesty note:&nbsp;</strong>
+    These are interactive evidence dashboards, not live security monitoring.
+    Most data is static benchmark output embedded in HTML.
+    The MCP gateway is the only one with real-time capability when a server is running.
+    Weak results are shown as-is — limitations are explained, not hidden.
+  </div>
+</section>
 
-<div class="grid">
-<a class="card" href="./mcp-security-gateway-monitor/">
-<h3>MCP Security Gateway Monitor</h3>
-<p>5-layer tool-call firewall for MCP agents. Red-team simulation: 37 attacks, 51% detection rate. Defense gap analysis + invocation graph.</p>
-<span class="tag tag-gateway">Gateway</span>
-</a>
+<!-- Featured three -->
+<div class="featured-label">Three strongest stories — working prototypes with real benchmark evidence</div>
+<div class="featured-grid">
 
-<a class="card" href="./hf-model-provenance-scanner/">
-<h3>HF Model Provenance Scanner</h3>
-<p>Supply chain attack detection for HuggingFace models. 30/30 attacks detected, P99 &lt;200ms. Real-time SOC view + security operations.</p>
-<span class="tag tag-detector">Detector</span>
-</a>
+  <!-- MCP -->
+  <a class="featured-card fc-mcp" href="./mcp-security-gateway-monitor/">
+    <div class="fc-tag">🛡 MCP Gateway Monitor</div>
+    <h3>MCP Security Gateway Monitor</h3>
+    <p class="fc-desc">
+      5-layer tool-call firewall for MCP agents. Red-team benchmark across 37 attack scenarios.
+      Blocks exfiltration and evasion variants; misses credential harvest and prompt injection.
+    </p>
+    <div class="fc-metrics">
+      <div class="fc-metric">
+        <div class="val ds-counter" data-target="51" data-suffix="%">0%</div>
+        <div class="lbl">Detection rate</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val ds-counter" data-target="37">0</div>
+        <div class="lbl">Attacks tested</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val" style="color:var(--red)">6</div>
+        <div class="lbl">Gap categories</div>
+      </div>
+    </div>
+    <div class="fc-cta">View dashboard <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+  </a>
 
-<a class="card" href="./llm-redteam-framework/">
-<h3>LLM Redteam Framework</h3>
-<p>Prompt injection detector. F1=0.93 on deepset/prompt-injections, 0.70 on transfer eval. Scenario risk surface + confidence distributions.</p>
-<span class="tag tag-detector">Detector</span>
-</a>
+  <!-- HF Scanner -->
+  <a class="featured-card fc-hf" href="./hf-model-provenance-scanner/">
+    <div class="fc-tag">🔍 Supply Chain Scanner</div>
+    <h3>HF Model Provenance Scanner</h3>
+    <p class="fc-desc">
+      Scans HuggingFace model artifacts for supply-chain attacks: pickle exploits, typosquatting,
+      unsigned weights, C2 callbacks. 33/33 attacks blocked across 5 analysis engines.
+    </p>
+    <div class="fc-metrics">
+      <div class="fc-metric">
+        <div class="val ds-counter" data-target="100" data-suffix="%">0%</div>
+        <div class="lbl">Detection rate</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val ds-counter" data-target="33">0</div>
+        <div class="lbl">Attacks tested</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val ds-counter" data-target="9.6" data-suffix="ms">0ms</div>
+        <div class="lbl">Avg scan time</div>
+      </div>
+    </div>
+    <div class="fc-cta">View dashboard <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+  </a>
 
-<a class="card" href="./adversarial-ml-lab/">
-<h3>Adversarial ML Lab</h3>
-<p>FGSM/PGD/C&W attacks + certified defenses for PyTorch models. Robustness evaluation framework.</p>
-<span class="tag tag-detector">Detector</span>
-</a>
-
-<a class="card" href="./model-privacy-attacks/">
-<h3>Model Privacy Attacks</h3>
-<p>Membership inference + model extraction attacks. Privacy risk evaluation for ML models.</p>
-<span class="tag tag-detector">Detector</span>
-</a>
-
-<a class="card" href="./dataset-poisoning-detector/">
-<h3>Dataset Poisoning Detector</h3>
-<p>Training data anomaly detection. ROC-AUC ~0.53-0.56 (honest). Sample triage + drift monitoring.</p>
-<span class="tag tag-detector">Detector</span>
-</a>
-
-<a class="card" href="./PulseNet-RUL-Forecasting/">
-<h3>PulseNet RUL Forecasting</h3>
-<p>Remaining Useful Life prediction for industrial equipment. NASA C-MAPSS benchmarks. F1=0.54, P99 4.3ms inference.</p>
-<span class="tag tag-detector">ICS/OT</span>
-</a>
-
-<a class="card" href="./attack-v19-core/">
-<h3>ATT&CK v19 Core</h3>
-<p>MITRE ATT&CK v19 data models. 222 techniques, 475 sub-techniques, 17 revoked remapped. Technique browser + coverage map.</p>
-<span class="tag tag-core">Core Library</span>
-</a>
-
-<a class="card" href="./attack-detection-engine/">
-<h3>Attack Detection Engine</h3>
-<p>5-source telemetry pipeline. 42 detection rules mapping to ATT&CK techniques. Log, traffic, behavior, event, code analysis.</p>
-<span class="tag tag-core">Core Library</span>
-</a>
-
-<a class="card" href="./aws-agent-identity-guard/">
-<h3>AWS Agent Identity Guard</h3>
-<p>Static IAM policy linter for AI agent workloads. Checks wildcards, PassRole, trust policies, privilege escalation.</p>
-<span class="tag tag-infra">Infrastructure</span>
-</a>
-
-<a class="card" href="./unified-ml-security-platform/">
-<h3>Unified ML Security Platform</h3>
-<p>Architecture spec integrating all 7 products. Health checks, portfolio measurements, integration map.</p>
-<span class="tag tag-infra">Architecture</span>
-</a>
-
-<a class="card" href="./mlsec-benchmark-suite/">
-<h3>ML Security Benchmark Suite</h3>
-<p>Benchmark runner with immutable signed evidence. Smoke tests, HMAC-SHA256 result signatures, schema validation.</p>
-<span class="tag tag-infra">Infrastructure</span>
-</a>
-
-<a class="card" href="./ml-security-command-center/">
-<h3>ML Security Command Center</h3>
-<p>Unified view of all 11 products. Aggregate status grid with detection metrics. (Simulated data — visualization only.)</p>
-<span class="tag tag-infra">Visualization</span>
-</a>
+  <!-- LLM Redteam -->
+  <a class="featured-card fc-llm" href="./llm-redteam-framework/">
+    <div class="fc-tag">🧪 Prompt Injection Detector</div>
+    <h3>LLM Redteam Framework</h3>
+    <p class="fc-desc">
+      Offline prompt-injection detector evaluated on two datasets.
+      F1=0.93 on the curated deepset benchmark — drops to 0.70 on out-of-distribution transfer eval.
+      Gap is documented, not papered over.
+    </p>
+    <div class="fc-metrics">
+      <div class="fc-metric">
+        <div class="val" style="color:var(--green)">0.93</div>
+        <div class="lbl">F1 curated</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val" style="color:var(--amber)">0.70</div>
+        <div class="lbl">F1 transfer</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val" style="color:var(--red)">−0.23</div>
+        <div class="lbl">F1 drop</div>
+      </div>
+    </div>
+    <div class="fc-cta">View dashboard <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
+  </a>
 </div>
 
-<div class="note">
-<strong>Honesty note:</strong> Most dashboards display static demonstration data embedded in HTML. They show what the tools produce, not live feeds. The MCP gateway dashboard is the only one with real-time WebSocket capability when connected to a running server. Numbers shown are from actual benchmark runs committed to each repository's evidence/ directory.
+<!-- All repos -->
+<div class="all-section">
+  <div class="all-section-title">All 13 repositories</div>
+
+  <div class="filter-tabs" id="filter-tabs">
+    <button class="ftab active" data-filter="all">All</button>
+    <button class="ftab" data-filter="working">Working prototype</button>
+    <button class="ftab" data-filter="prototype">Prototype</button>
+    <button class="ftab" data-filter="spec">Architecture spec</button>
+    <button class="ftab" data-filter="smoke">Smoke tests</button>
+    <button class="ftab" data-filter="viz">Visualization</button>
+    <button class="ftab" data-filter="ics">ICS/OT</button>
+  </div>
+
+  <div class="repo-grid" id="repo-grid">
+
+    <a class="repo-card" data-type="working" href="./mcp-security-gateway-monitor/">
+      <div class="repo-card-top">
+        <h4>MCP Security Gateway Monitor</h4>
+      </div>
+      <p>5-layer MCP tool-call firewall. 51% detection on 37 bundled attacks. Real benchmark data.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-working">Working prototype</span>
+        <span class="repo-metric text-amber">51% detection</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="working" href="./hf-model-provenance-scanner/">
+      <div class="repo-card-top">
+        <h4>HF Model Provenance Scanner</h4>
+      </div>
+      <p>Supply chain attack scanner for HuggingFace. 33/33 blocked, 9.6ms avg, 5 analysis engines.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-working">Working prototype</span>
+        <span class="repo-metric text-teal">100% detection</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="working" href="./llm-redteam-framework/">
+      <div class="repo-card-top">
+        <h4>LLM Redteam Framework</h4>
+      </div>
+      <p>Prompt injection detector. F1=0.93 curated / 0.70 transfer. Gap documented.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-working">Working prototype</span>
+        <span class="repo-metric text-amber">F1 0.93 → 0.70</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="prototype" href="./adversarial-ml-lab/">
+      <div class="repo-card-top">
+        <h4>Adversarial ML Lab</h4>
+      </div>
+      <p>FGSM/PGD/C&W attacks + Randomized Smoothing defense. CIFAR-10: clean 72%, PGD 23%.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-metric text-muted">72% → 23% (PGD)</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="prototype" href="./model-privacy-attacks/">
+      <div class="repo-card-top">
+        <h4>Model Privacy Attacks</h4>
+      </div>
+      <p>Membership inference + model extraction. MI AUC 0.87 on CIFAR-10 ResNet18.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-metric text-muted">MI AUC 0.87</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="prototype" href="./dataset-poisoning-detector/">
+      <div class="repo-card-top">
+        <h4>Dataset Poisoning Detector</h4>
+      </div>
+      <p>Training data anomaly flagging. ROC-AUC ~0.54 (baseline). Honest result — target is 0.75.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-metric text-muted">ROC-AUC ~0.54</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="ics" href="./PulseNet-RUL-Forecasting/">
+      <div class="repo-card-top">
+        <h4>PulseNet RUL Forecasting</h4>
+      </div>
+      <p>ICS/OT equipment RUL prediction. NASA C-MAPSS benchmarks. F1=0.54, P99 4.3ms inference.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-ics">ICS/OT</span>
+        <span class="repo-metric text-muted">F1=0.54</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="prototype" href="./attack-v19-core/">
+      <div class="repo-card-top">
+        <h4>ATT&CK v19 Core</h4>
+      </div>
+      <p>MITRE ATT&CK v19 data models. 222 techniques, 475 subs, 17 revoked remapped. 18/18 tests pass.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-prototype">Core library</span>
+        <span class="repo-metric text-muted">18/18 tests</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="prototype" href="./attack-detection-engine/">
+      <div class="repo-card-top">
+        <h4>Attack Detection Engine</h4>
+      </div>
+      <p>5-source telemetry pipeline. 42 detection rules mapping to ATT&CK. 80%+ coverage enforced in CI.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-prototype">Core library</span>
+        <span class="repo-metric text-muted">42 rules</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="prototype" href="./aws-agent-identity-guard/">
+      <div class="repo-card-top">
+        <h4>AWS Agent Identity Guard</h4>
+      </div>
+      <p>Static IAM policy linter for AI agent workloads. Checks wildcards, PassRole, trust boundary issues.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-metric text-muted">Static analysis</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="spec" href="./unified-ml-security-platform/">
+      <div class="repo-card-top">
+        <h4>Unified ML Security Platform</h4>
+      </div>
+      <p>Architecture spec integrating all 7 detectors. Not a running platform — design document with health checks.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-spec">Architecture spec</span>
+        <span class="repo-metric text-muted">Not running</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="smoke" href="./mlsec-benchmark-suite/">
+      <div class="repo-card-top">
+        <h4>ML Security Benchmark Suite</h4>
+      </div>
+      <p>Benchmark runner with HMAC-SHA256 signed evidence. Smoke tests only — not full production benchmarks.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-smoke">Smoke tests</span>
+        <span class="repo-metric text-muted">Signed evidence</span>
+      </div>
+    </a>
+
+    <a class="repo-card" data-type="viz" href="./ml-security-command-center/">
+      <div class="repo-card-top">
+        <h4>ML Security Command Center</h4>
+      </div>
+      <p>Aggregate status view across all projects. Simulated data — this is a visualization prototype, not live monitoring.</p>
+      <div class="repo-card-footer">
+        <span class="repo-type-badge rtype-viz">Simulated data</span>
+        <span class="repo-metric text-muted">Visualization only</span>
+      </div>
+    </a>
+
+  </div>
 </div>
 
-<footer>
-github.com/poojakira — ML Security Portfolio — Hosted on Cloudflare Pages
+<footer class="site-footer">
+  <a href="https://github.com/poojakira">github.com/poojakira</a> ·
+  <a href="https://linkedin.com/in/poojakiran">linkedin.com/in/poojakiran</a> ·
+  Pooja Kiran — ML Security Engineer
 </footer>
-</div>
+
+<script src="./shared/dashboard.js"></script>
+<script>
+// Filter tabs
+document.querySelectorAll('.ftab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    document.querySelectorAll('.repo-card').forEach(card => {
+      card.classList.toggle('hidden', f !== 'all' && card.dataset.type !== f);
+    });
+  });
+});
+</script>
 </body>
 </html>

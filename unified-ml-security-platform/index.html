@@ -1,396 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ML Security Platform — Integration Dashboard</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unified ML Security Platform — Architecture Dashboard</title>
+<link rel="stylesheet" href="../shared/design-system.css">
 <style>
-:root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --border: #30363d;
-  --text: #e6edf3;
-  --text-muted: #8b949e;
-  --accent: #58a6ff;
-  --green: #3fb950;
-  --red: #f85149;
-  --yellow: #d29922;
-  --orange: #db6d28;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-  background: var(--bg);
-  color: var(--text);
-  padding: 24px;
-  line-height: 1.5;
-}
-h1 { font-size: 1.8rem; margin-bottom: 4px; color: var(--accent); }
-h2 { font-size: 1.3rem; margin: 32px 0 12px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  overflow-x: auto;
-}
-.card.full { grid-column: 1 / -1; }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
-th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.badge-pass { background: rgba(63,185,80,0.15); color: var(--green); }
-.badge-fail { background: rgba(248,81,73,0.15); color: var(--red); }
-.badge-warn { background: rgba(210,153,34,0.15); color: var(--yellow); }
-.badge-critical { background: rgba(248,81,73,0.15); color: var(--red); }
-.badge-high { background: rgba(219,109,40,0.15); color: var(--orange); }
-.badge-medium { background: rgba(210,153,34,0.15); color: var(--yellow); }
-.metric-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.metric-row:last-child { border-bottom: none; }
-.metric-label { color: var(--text-muted); font-size: 0.85rem; }
-.metric-value { font-weight: 700; font-size: 1.1rem; }
-.metric-value.green { color: var(--green); }
-.metric-value.yellow { color: var(--yellow); }
-.metric-value.red { color: var(--red); }
-pre.arch {
-  font-size: 0.7rem;
-  line-height: 1.4;
-  color: var(--text-muted);
-  overflow-x: auto;
-  white-space: pre;
-}
-.bar-container { display: flex; align-items: center; gap: 8px; }
-.bar { height: 8px; border-radius: 4px; background: var(--border); flex: 1; position: relative; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 4px; background: var(--green); }
-.bar-label { font-size: 0.75rem; color: var(--text-muted); min-width: 36px; text-align: right; }
-.timestamp { color: var(--text-muted); font-size: 0.75rem; margin-top: 8px; }
-.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-@media (max-width: 700px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
-.summary-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-}
-.summary-card .big { font-size: 2rem; font-weight: 700; }
-.summary-card .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+.arch-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+.arch-block { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; }
+.arch-block h4 { font-size:.78rem; font-weight:700; color:var(--blue); margin-bottom:6px; }
+.arch-block p { font-size:.72rem; color:var(--muted); line-height:1.4; }
+.arch-block .status { font-size:.65rem; margin-top:6px; font-weight:600; }
+.status-spec { color:var(--violet); }
+.status-partial { color:var(--amber); }
 </style>
 </head>
 <body>
-<h1>&#x1F6E1;&#xFE0F; ML Security Platform — Integration Dashboard</h1>
-<p class="subtitle">Unified architecture health for 7 product repos | ATT&CK v19 mapped | Last evidence: 2026-07-21</p>
+<nav class="ds-nav">
+  <a class="ds-nav-back" href="../">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+    All dashboards
+  </a>
+  <div class="ds-nav-sep"></div>
+  <div class="ds-nav-title">Unified ML Security Platform</div>
+  <span class="ds-nav-badge spec">Architecture spec</span>
+</nav>
 
-<!-- Summary Cards -->
-<div class="summary-grid">
-  <div class="summary-card"><div class="big green">9/9</div><div class="label">Checks Passing</div></div>
-  <div class="summary-card"><div class="big" style="color:var(--accent)">7</div><div class="label">Product Repos</div></div>
-  <div class="summary-card"><div class="big" style="color:var(--accent)">78</div><div class="label">Attack Definitions</div></div>
-  <div class="summary-card"><div class="big" style="color:var(--accent)">94</div><div class="label">Tests Passing</div></div>
-</div>
+<div class="ds-page">
+  <div class="ds-page-header">
+    <h1>Unified ML Security Platform</h1>
+    <div class="ds-meta">
+      <span>Architecture specification — not a running platform</span>
+      <span>·</span>
+      <a href="https://github.com/poojakira/unified-ml-security-platform" target="_blank">Source repo ↗</a>
+    </div>
+  </div>
 
-<!-- Integration Health Table -->
-<h2>&#x1F4CB; Integration Health — Product Repos</h2>
-<div class="card full">
-<table>
-<thead>
-<tr><th>Product</th><th>Repo</th><th>Route</th><th>Status</th><th>Tests</th><th>Duration</th><th>Purpose</th></tr>
-</thead>
-<tbody>
-<tr>
-  <td><strong>MCP Security Gateway</strong></td>
-  <td>mcp-security-gateway-monitor</td>
-  <td><code>/monitor</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>20 passed</td>
-  <td>1.02s</td>
-  <td>Prompt-injection normalization &amp; BCC header bypass</td>
-</tr>
-<tr>
-  <td><strong>HF Model Scanner</strong></td>
-  <td>hf-model-provenance-scanner</td>
-  <td><code>/scan</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>15 passed</td>
-  <td>3.92s</td>
-  <td>Pickle magic-byte &amp; scanner regression</td>
-</tr>
-<tr>
-  <td><strong>PulseNet RUL</strong></td>
-  <td>PulseNet-RUL-Forecasting</td>
-  <td><code>/rul</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>7 passed</td>
-  <td>0.95s</td>
-  <td>JWT secret hardening &amp; audit-log integrity</td>
-</tr>
-<tr>
-  <td><strong>Dataset Poisoning</strong></td>
-  <td>dataset-poisoning-detector</td>
-  <td><code>/poisoning</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>7 passed</td>
-  <td>5.83s</td>
-  <td>False-positive budget &amp; slow-drift poisoning</td>
-</tr>
-<tr>
-  <td><strong>LLM Red Team</strong></td>
-  <td>llm-redteam-framework</td>
-  <td><code>/redteam</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>4 passed</td>
-  <td>4.68s</td>
-  <td>LLM classifier false-positive budget enforcement</td>
-</tr>
-<tr>
-  <td><strong>Model Privacy</strong></td>
-  <td>model-privacy-attacks</td>
-  <td><code>/privacy</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>9 passed</td>
-  <td>12.19s</td>
-  <td>Privacy attack &amp; probability-fidelity regression</td>
-</tr>
-<tr>
-  <td><strong>Adversarial ML Lab</strong></td>
-  <td>adversarial-ml-lab</td>
-  <td><code>/robustness</code></td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td>32 passed</td>
-  <td>9.94s</td>
-  <td>Benchmark signing &amp; verification integrity</td>
-</tr>
-</tbody>
-</table>
-<p class="timestamp">Source: evidence/portfolio_measurement_2026-07-21.json | Generated: 2026-07-22T01:01:29+00:00</p>
+  <div class="ds-honesty">
+    <strong>This is an architecture specification, not a running system.</strong>
+    The design integrates all 7 detectors behind a FastAPI gateway with Prometheus metrics and Grafana dashboards.
+    The Docker Compose file exists and health checks are wired, but end-to-end integration tests do not yet pass.
+    "77 finding types → 100+ ATT&CK mappings" is a design target, not a measured result.
+  </div>
+
+  <div class="ds-stats">
+    <div class="ds-stat violet">
+      <div class="stat-value">7</div>
+      <div class="stat-label">Detectors in spec</div>
+      <div class="stat-sub">HF · MCP · LLM · Adv · Privacy · Poison · PulseNet</div>
+    </div>
+    <div class="ds-stat amber">
+      <div class="stat-value">77</div>
+      <div class="stat-label">Finding types (design)</div>
+      <div class="stat-sub">Target — not measured</div>
+    </div>
+    <div class="ds-stat blue">
+      <div class="stat-value">100+</div>
+      <div class="stat-label">ATT&CK mappings (design)</div>
+      <div class="stat-sub">Target — not measured</div>
+    </div>
+    <div class="ds-stat red">
+      <div class="stat-value">⚠</div>
+      <div class="stat-label">Not running</div>
+      <div class="stat-sub">Integration tests failing</div>
+    </div>
+  </div>
+
+  <div class="ds-section">
+    <div class="ds-section-title">Architecture components — spec status</div>
+    <div class="arch-grid">
+      <div class="arch-block"><h4>API Gateway (FastAPI)</h4><p>Routes detector requests, handles auth, rate limiting</p><div class="status status-partial">⚠ Partial — auth not complete</div></div>
+      <div class="arch-block"><h4>Streamlit Dashboard</h4><p>Aggregate view of all detector outputs</p><div class="status status-spec">Spec only</div></div>
+      <div class="arch-block"><h4>Prometheus Metrics</h4><p>Detection latency, throughput, error rates</p><div class="status status-partial">⚠ Wired, not scraped</div></div>
+      <div class="arch-block"><h4>Grafana Dashboards</h4><p>Visualisations for all 7 detector metric streams</p><div class="status status-spec">Spec only</div></div>
+      <div class="arch-block"><h4>ATT&CK Mapping Engine</h4><p>Maps findings to v19 techniques via attack-v19-core</p><div class="status status-partial">⚠ Partial integration</div></div>
+      <div class="arch-block"><h4>Docker Compose</h4><p>Orchestrates all services</p><div class="status status-partial">⚠ Health checks fail on full stack</div></div>
+    </div>
+  </div>
+
+  <footer class="ds-footer">
+    <a href="../">← All dashboards</a> ·
+    <a href="https://github.com/poojakira/unified-ml-security-platform" target="_blank">Source repo</a> ·
+    Architecture spec — not a running platform
+  </footer>
 </div>
 
-<!-- ATT&CK Coverage + Attack Catalog -->
-<div class="grid">
-<div class="card">
-<h2 style="margin-top:0">&#x1F3AF; ATT&CK v19 Coverage by Product</h2>
-<table>
-<thead><tr><th>Product</th><th>Attacks Defined</th><th>Key Techniques</th></tr></thead>
-<tbody>
-<tr><td>Adversarial ML Lab</td><td>25</td><td>T1685, T1682, T1689</td></tr>
-<tr><td>MCP Security Gateway</td><td>17</td><td>T1684, T1687, T1685, T1689</td></tr>
-<tr><td>HF Model Scanner</td><td>16</td><td>T1683/001, T1027/018, T1195.001</td></tr>
-<tr><td>LLM Red Team</td><td>6</td><td>T1685, T1682, T1684</td></tr>
-<tr><td>Dataset Poisoning</td><td>5</td><td>T1685, T1688</td></tr>
-<tr><td>PulseNet RUL</td><td>5</td><td>T1691-T1695, T0843/T0873</td></tr>
-<tr><td>Model Privacy</td><td>4</td><td>T1685, T1689</td></tr>
-</tbody>
-</table>
-<div class="metric-row" style="margin-top:12px">
-  <span class="metric-label">Total Attack Catalog</span>
-  <span class="metric-value green">78 definitions</span>
-</div>
-<div class="metric-row">
-  <span class="metric-label">ATT&CK Techniques Covered</span>
-  <span class="metric-value" style="color:var(--accent)">17+ unique</span>
-</div>
-<div class="metric-row">
-  <span class="metric-label">Tactics: TA0005 (Stealth) + TA0112 (Defense Impairment)</span>
-  <span class="metric-value green">&#x2713;</span>
-</div>
-</div>
-
-<div class="card">
-<h2 style="margin-top:0">&#x1F4CA; Attack Distribution</h2>
-<div style="margin-top:12px">
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">Adversarial ML</span>
-    <div class="bar"><div class="bar-fill" style="width:100%;background:var(--accent)"></div></div>
-    <span class="bar-label">25</span>
-  </div>
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">MCP Gateway</span>
-    <div class="bar"><div class="bar-fill" style="width:68%;background:var(--green)"></div></div>
-    <span class="bar-label">17</span>
-  </div>
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">HF Scanner</span>
-    <div class="bar"><div class="bar-fill" style="width:64%;background:var(--green)"></div></div>
-    <span class="bar-label">16</span>
-  </div>
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">LLM Red Team</span>
-    <div class="bar"><div class="bar-fill" style="width:24%;background:var(--yellow)"></div></div>
-    <span class="bar-label">6</span>
-  </div>
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">Dataset Poison</span>
-    <div class="bar"><div class="bar-fill" style="width:20%;background:var(--yellow)"></div></div>
-    <span class="bar-label">5</span>
-  </div>
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">PulseNet</span>
-    <div class="bar"><div class="bar-fill" style="width:20%;background:var(--yellow)"></div></div>
-    <span class="bar-label">5</span>
-  </div>
-  <div class="bar-container" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:0.8rem">Model Privacy</span>
-    <div class="bar"><div class="bar-fill" style="width:16%;background:var(--orange)"></div></div>
-    <span class="bar-label">4</span>
-  </div>
-</div>
-<div class="metric-row" style="margin-top:16px">
-  <span class="metric-label">Revoked Techniques Auto-Remapped</span>
-  <span class="metric-value" style="color:var(--accent)">17</span>
-</div>
-<div class="metric-row">
-  <span class="metric-label">New v19 Techniques Available</span>
-  <span class="metric-value" style="color:var(--accent)">48</span>
-</div>
-</div>
-</div>
-<!-- Portfolio Measurement Results -->
-<h2>&#x1F9EA; Portfolio Measurement Results</h2>
-<div class="card full">
-<table>
-<thead><tr><th>Repo ID</th><th>Status</th><th>Command</th><th>Duration</th><th>Result</th></tr></thead>
-<tbody>
-<tr>
-  <td>repo1-mcp-security-gateway-monitor</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_normalization_pipeline.py tests/test_bcc_normalization.py</code></td>
-  <td>23.2s</td>
-  <td>20 passed in 1.02s</td>
-</tr>
-<tr>
-  <td>repo2-hf-model-provenance-scanner</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_pickle_scanner.py</code></td>
-  <td>25.3s</td>
-  <td>15 passed in 3.92s</td>
-</tr>
-<tr>
-  <td>repo3-PulseNet-RUL-Forecasting</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_auth_secret.py tests/test_extra_coverage.py::TestAuditLogger</code></td>
-  <td>7.4s</td>
-  <td>7 passed in 0.95s</td>
-</tr>
-<tr>
-  <td>repo4-dataset-poisoning-detector</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_drift.py tests/test_fp_budget.py</code></td>
-  <td>10.4s</td>
-  <td>7 passed in 5.83s</td>
-</tr>
-<tr>
-  <td>repo5-llm-redteam-framework</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_fp_budget.py</code></td>
-  <td>10.5s</td>
-  <td>4 passed in 4.68s</td>
-</tr>
-<tr>
-  <td>repo6-model-privacy-attacks</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_privacy_attacks.py</code></td>
-  <td>25.3s</td>
-  <td>9 passed in 12.19s</td>
-</tr>
-<tr>
-  <td>repo7-adversarial-ml-lab</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>pytest tests/test_ci_signing.py tests/test_benchmark_verify.py</code></td>
-  <td>22.5s</td>
-  <td>32 passed in 9.94s</td>
-</tr>
-<tr>
-  <td>repo8-unified-ml-security-platform</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>py_compile spec_service.py gateway_server.py</code></td>
-  <td>0.2s</td>
-  <td>Compile OK</td>
-</tr>
-<tr>
-  <td>repo8-platform (docker-compose)</td>
-  <td><span class="badge badge-pass">PASS</span></td>
-  <td><code>docker compose config</code></td>
-  <td>0.6s</td>
-  <td>Config valid</td>
-</tr>
-</tbody>
-</table>
-<p class="timestamp">Scope: Focused local checked-out branch security and correctness measurements; not market-superiority proof.</p>
-</div>
-<!-- Architecture Diagram -->
-<h2>&#x1F3D7;&#xFE0F; Platform Architecture</h2>
-<div class="card full">
-<pre class="arch">
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     UNIFIED ML SECURITY PLATFORM (Gateway)                       │
-│                                                                                 │
-│   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   │
-│   │ API Gateway  │   │  Dashboard   │   │  Prometheus  │   │   Grafana    │   │
-│   │  (FastAPI)   │   │ (Streamlit)  │   │   Metrics    │   │  Dashboards  │   │
-│   │  :8000       │   │  :8501       │   │  :9090       │   │  :3000       │   │
-│   └──────┬───────┘   └──────┬───────┘   └──────┬───────┘   └──────┬───────┘   │
-│          └───────────────────┼───────────────────┼───────────────────┘          │
-│                              ▼                   ▼                               │
-│                 ┌──────────────────────────────────────┐                        │
-│                 │      ATT&CK v19 Mapping Engine       │                        │
-│                 │    attack-v19-core (222 techs,        │                        │
-│                 │    475 subs, TA0005, TA0112)          │                        │
-│                 └──────────────────┬───────────────────┘                        │
-└────────────────────────────────────┼────────────────────────────────────────────┘
-                                     │
-     ┌───────────┬───────────┬───────┼───────┬───────────┬───────────┐
-     ▼           ▼           ▼       ▼       ▼           ▼           ▼
-┌─────────┐┌─────────┐┌─────────┐┌─────────┐┌─────────┐┌─────────┐┌─────────┐
-│HF Model ││MCP Gate-││Adversar-││LLM Red- ││Dataset  ││Model    ││PulseNet │
-│Scanner  ││way Mon. ││ial ML   ││team Fw. ││Poisoning││Privacy  ││RUL      │
-│         ││         ││Lab      ││         ││Detector ││Attacks  ││Forecast │
-│ :8001   ││ :8002   ││ :8003   ││ :8004   ││ :8005   ││ :8006   ││ :8007   │
-│/scan    ││/monitor ││/robust. ││/redteam ││/poison. ││/privacy ││/rul     │
-│16 atks  ││17 atks  ││25 atks  ││6 atks   ││5 atks   ││4 atks   ││5 atks   │
-└─────────┘└─────────┘└─────────┘└─────────┘└─────────┘└─────────┘└─────────┘
-     │           │           │       │       │           │           │
-     └───────────┴───────────┴───────┴───────┴───────────┴───────────┘
-                                     │
-                 ┌───────────────────────────────────────┐
-                 │        SHARED INFRASTRUCTURE          │
-                 │  attack-v19-core v19.1.0              │
-                 │  attack-detection-engine v1.0.0       │
-                 │  Docker Compose (internal network)    │
-                 │  CI: ruff → pyright → pytest (80%+)  │
-                 └───────────────────────────────────────┘
-</pre>
-</div>
-
-<!-- File Paths Reference -->
-<h2>&#x1F4C2; Key File Paths</h2>
-<div class="card full">
-<table>
-<thead><tr><th>File</th><th>Purpose</th></tr></thead>
-<tbody>
-<tr><td><code>evidence/portfolio_measurement_2026-07-21.json</code></td><td>Raw measurement results (source of truth for this dashboard)</td></tr>
-<tr><td><code>attacks/attack_catalog.py</code></td><td>78 attack definitions mapped to 7 products</td></tr>
-<tr><td><code>benchmarks/portfolio_measure.py</code></td><td>Runner script for portfolio measurements</td></tr>
-<tr><td><code>products/</code></td><td>Per-product health tests, Dockerfiles, servers</td></tr>
-<tr><td><code>docker-compose.yml</code></td><td>Full stack deployment (7 services + gateway)</td></tr>
-<tr><td><code>INTEGRATION_MAP.md</code></td><td>Integration contracts per product slot</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td>Target gateway routing specification</td></tr>
-<tr><td><code>.github/workflows/ci.yml</code></td><td>CI pipeline: lint → typecheck → test → security scan</td></tr>
-</tbody>
-</table>
-</div>
-
-<p style="text-align:center;color:var(--text-muted);margin-top:32px;font-size:0.75rem;">
-  Dashboard generated for unified-ml-security-platform | Data from evidence/portfolio_measurement_2026-07-21.json | ATT&CK v19 compliant
-</p>
-
+<script src="../shared/dashboard.js"></script>
 </body>
 </html>

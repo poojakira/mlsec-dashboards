@@ -4,34 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HF Model Provenance Scanner — Dashboards</title>
+<link rel="stylesheet" href="../shared/design-system.css">
 <style>
-:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
-.container{max-width:600px;text-align:center}
-h1{font-size:1.5rem;margin-bottom:8px}
-p{color:var(--muted);margin-bottom:32px;font-size:0.9rem}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-a{display:block;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;text-decoration:none;color:var(--text);transition:border-color 0.2s,transform 0.2s}
-a:hover{border-color:var(--blue);transform:translateY(-3px)}
-a h2{font-size:1rem;color:var(--blue);margin-bottom:8px}
-a p{color:var(--muted);font-size:0.8rem;margin:0}
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.chooser { max-width:520px; width:100%; padding:0 24px; text-align:center; }
+.chooser h1 { font-size:1.3rem; margin-bottom:8px; }
+.chooser p { color:var(--muted); font-size:.85rem; margin-bottom:32px; }
+.cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.pick { display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; text-decoration:none; color:var(--text); transition:border-color .2s, transform .2s; }
+.pick:hover { border-color:var(--blue); transform:translateY(-3px); }
+.pick h2 { font-size:.95rem; color:var(--blue); margin-bottom:8px; }
+.pick p { color:var(--muted); font-size:.78rem; margin:0; }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>HF Model Provenance Scanner</h1>
-<p>Supply chain attack detection for HuggingFace models. Choose a dashboard view:</p>
-<div class="cards">
-<a href="security/">
-<h2>Security Operations</h2>
-<p>Attack coverage, rule triggers, severity distribution, scan results</p>
-</a>
-<a href="realtime/">
-<h2>Realtime SOC</h2>
-<p>Live threat visualization, 3D topology, kill chain analysis</p>
-</a>
-</div>
+<nav class="ds-nav">
+  <a class="ds-nav-back" href="../">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+    All dashboards
+  </a>
+  <div class="ds-nav-sep"></div>
+  <div class="ds-nav-title">HF Model Provenance Scanner</div>
+  <span class="ds-nav-badge evidence">Working prototype</span>
+</nav>
+<div class="chooser">
+  <h1>HF Model Provenance Scanner</h1>
+  <p>Supply chain attack detection for HuggingFace models. Choose a view:</p>
+  <div class="cards">
+    <a class="pick" href="security/">
+      <h2>Security Operations</h2>
+      <p>Attack coverage, kill chain, live code scanner, filterable results</p>
+    </a>
+    <a class="pick" href="realtime/">
+      <h2>Realtime SOC</h2>
+      <p>Live threat visualization, 3D topology, event stream</p>
+    </a>
+  </div>
 </div>
 </body>
 </html>
