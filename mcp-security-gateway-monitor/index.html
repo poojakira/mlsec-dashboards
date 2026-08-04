@@ -93,7 +93,13 @@
     </div>
   </div>
 
-  <!-- Connection status bar -->
+    <div class="ds-honesty">
+    <strong>Live data when mcp-gateway is running.</strong>
+    Stats update every 2 seconds from <code>localhost:8080/v1/metrics</code> via dashboard_server.
+    When the gateway is offline, all stat cards show <code>—</code>. Detection rate of 51% is from the
+    offline red-team benchmark (37 attacks); live metrics show actual production request counts.
+  </div>
+<!-- Connection status bar -->
   <div class="conn-bar" id="conn-bar">
     <div class="conn-dot waiting" id="conn-dot"></div>
     <span class="conn-label" id="conn-label"><strong>Connecting</strong> — waiting for dashboard_server on localhost:9001…</span>
@@ -344,3 +350,4 @@ document.getElementById('inspect-btn').addEventListener('click', async () => {
 </script>
 </body>
 </html>
+

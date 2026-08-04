@@ -149,6 +149,7 @@ body { padding-top: 0 !important; }
 <body>
 <nav class="ds-nav"><a class="ds-nav-back" href="../../"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>All dashboards</a><div class="ds-nav-sep"></div><div class="ds-nav-title">HF Provenance Scanner — Realtime SOC</div><a href="../security/" class="ds-nav-badge evidence" style="text-decoration:none">Security ops →</a></nav>
 
+<div class="ds-honesty" style="position:relative;z-index:100;margin:60px 24px 0">Simulated real-time visualization. Event stream and threat topology use generated demo data embedded in this file — not a live feed from a running scanner. Run <code>hf-scanner</code> via the <a href="../security/">Security Operations</a> dashboard for real scan results.</div>
 <nav class="ds-nav">
   <a class="ds-nav-back" href="../../">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
@@ -158,6 +159,7 @@ body { padding-top: 0 !important; }
   <div class="ds-nav-title">HF Model Provenance Scanner — Realtime SOC</div>
   <a href="../security/" class="ds-nav-badge evidence" style="text-decoration:none">Security ops →</a>
 </nav>
+<div class="ds-honesty" style="position:relative;z-index:100;margin:60px 24px 0">Simulated real-time visualization. Event stream and threat topology use generated demo data embedded in this file — not a live feed from a running scanner. Run <code>hf-scanner</code> via the <a href="../security/">Security Operations</a> dashboard for real scan results.</div>
 <div id="sceneHost">
   <canvas id="threatScene" aria-label="3D cyber supply chain threat map"></canvas>
   <div id="fallbackMap" class="fallback-map" aria-hidden="true"></div>
@@ -225,8 +227,15 @@ body { padding-top: 0 !important; }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 </script>
-</body>
+
+<div class="ds-footer" style="position:relative;z-index:100;padding:12px 24px;text-align:center">
+  <a href="../../">← All dashboards</a> ·
+  <a href="../security/">Security ops view</a> ·
+  <a href="https://github.com/poojakira/hf-model-provenance-scanner" target="_blank">github.com/poojakira/hf-model-provenance-scanner ↗</a>
+</div></body>
 </html>
+
+
 
 
 
