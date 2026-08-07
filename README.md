@@ -22,12 +22,12 @@ Arizona State University - **Completed**
 
 Evidence-backed public repositories:
 
-- **LLM-Guard-Scanner**: prompt-injection, RAG-poisoning, and output-leakage scanner.
-- **Model-Supply-Chain-Auditor**: ML artifact integrity scanning, SARIF output, and signing utilities.
-- **ML-Privacy-Attacks**: membership inference, model inversion, and privacy-risk measurement.
-- **Adversarial-Robustness-Toolkit**: FGSM/PGD/C&W/AutoAttack implementations and robustness tests.
-- **docquery**: RAG serving stack with tenant-aware API controls and retrieved-context hardening.
-- **PulseNet-RUL-Forecasting**: secure predictive-maintenance demo with artifact-integrity checks.
+- **llm-redteam-framework**: prompt-injection detection, SARIF output, F1=0.70 OOD eval.
+- **hf-model-provenance-scanner**: ML supply chain scanner, pickle safety, file-size limits.
+- **model-privacy-attacks**: membership inference (Yeom, LiRA), model inversion, DP-SGD defense.
+- **adversarial-ml-lab**: FGSM/PGD/C&W/AutoAttack benchmark harness (results are literature-consistent, no weights committed).
+- **mcp-security-gateway-monitor**: MCP tool-call security monitor, ~51% detection on bundled catalog.
+- **PulseNet-RUL-Forecasting**: secure MLOps pipeline, NASA C-MAPSS FD001, F1=0.54 Isolation Forest.
 
 ## Contact
 
