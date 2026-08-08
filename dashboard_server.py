@@ -1,452 +1,328 @@
 """
-dashboard_server.py — Local backend proxy for mlsec-dashboards
+dashboard_server.py — ML Security Dashboard Hub
 
-Bridges the browser dashboards to the real CLI tools via SSE streams.
+Safe FastAPI server that serves static dashboards and aggregates metrics
+from sibling repository evidence files. No subprocess execution.
 
 Usage:
-    pip install fastapi uvicorn httpx
-    python dashboard_server.py
+    export DASHBOARD_API_KEY=your-secret-key
+    uvicorn dashboard_server:app --port 8080
 
-Serves on http://localhost:9001
-Dashboards connect to this server for live data.
+Environment Variables:
+    DASHBOARD_API_KEY  — Required. API key for token-based authentication.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
-import re
-import shlex
-import subprocess
-import sys
+import os
 import time
-from typing import AsyncIterator
+from pathlib import Path
+from typing import Any
 
-import httpx
-from fastapi import FastAPI, Query
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.security import APIKeyHeader
+from fastapi.staticfiles import StaticFiles
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 
-MCP_BASE = "http://localhost:8080"   # mcp-gateway server
-PROXY_PORT = 9001                    # this server
-POLL_INTERVAL = 2.0                  # seconds between MCP metric polls
+API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+BASE_DIR = Path(__file__).resolve().parent
+REPOS_DIR = BASE_DIR.parent  # sibling repos are in the parent directory
 
-app = FastAPI(title="mlsec-dashboard-server", version="2.0.0")
+# Known sibling repos to scan for evidence files
+SIBLING_REPOS = [
+    "aws-agent-identity-guard",
+    "hf-model-provenance-scanner",
+    "mcp-security-gateway-monitor",
+    "llm-redteam-framework",
+    "model-privacy-attacks",
+    "adversarial-ml-lab",
+    "PulseNet-RUL-Forecasting",
+    "attack-v19-core",
+    "dataset-poisoning-detector",
+]
 
+# Common evidence file paths to search within each repo
+EVIDENCE_PATHS = [
+    "evidence",
+    "results",
+    "metrics",
+    "reports",
+    "output",
+]
+
+app = FastAPI(
+    title="ML Security Dashboard Hub",
+    version="3.0.0",
+    description="Unified dashboard for ML security portfolio tool metrics.",
+)
+
+# CORS restricted to localhost only
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    allow_origins=[
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_methods=["GET"],
+    allow_headers=["Authorization", "X-API-Key"],
 )
+
+# ---------------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------------
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
+    """Validate API key from X-API-Key header."""
+    if not API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfigured: DASHBOARD_API_KEY environment variable not set.",
+        )
+    if not api_key or api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key.")
+    return api_key
+
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def sse(event: str, data: dict | str | list) -> str:
-    """Format a Server-Sent Events frame."""
-    payload = data if isinstance(data, str) else json.dumps(data)
-    return f"event: {event}\ndata: {payload}\n\n"
+
+def _find_evidence_files(repo_name: str) -> list[Path]:
+    """Find JSON evidence files in a sibling repo."""
+    repo_path = REPOS_DIR / repo_name
+    if not repo_path.is_dir():
+        return []
+
+    json_files: list[Path] = []
+
+    # Check known evidence directories
+    for evidence_dir in EVIDENCE_PATHS:
+        evidence_path = repo_path / evidence_dir
+        if evidence_path.is_dir():
+            for f in evidence_path.rglob("*.json"):
+                if f.is_file() and f.stat().st_size < 10_000_000:  # 10MB limit
+                    json_files.append(f)
+
+    # Also check root-level evidence/results JSON files
+    for f in repo_path.glob("*.json"):
+        if f.is_file() and f.stat().st_size < 10_000_000:
+            json_files.append(f)
+
+    return json_files
 
 
-def sse_error(msg: str) -> str:
-    return sse("error", {"error": msg})
+def _safe_read_json(path: Path) -> dict[str, Any] | list | None:
+    """Safely read and parse a JSON file. Returns None on failure."""
+    try:
+        text = path.read_text(encoding="utf-8")
+        return json.loads(text)
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        return None
 
 
-def parse_prometheus(text: str) -> dict:
-    """Parse Prometheus text exposition into a flat dict."""
-    result: dict = {}
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        # label-less: metric_name value
-        m = re.match(r'^([a-zA-Z_:][a-zA-Z0-9_:]*)\s+([\d.+\-eEinf]+)$', line)
-        if m:
-            result[m.group(1)] = float(m.group(2)) if "." in m.group(2) else int(float(m.group(2)))
-            continue
-        # with labels: metric_name{k="v",...} value
-        m = re.match(r'^([a-zA-Z_:][a-zA-Z0-9_:]*)\{([^}]+)\}\s+([\d.+\-eEinf]+)$', line)
-        if m:
-            key = f'{m.group(1)}{{{m.group(2)}}}'
-            try:
-                result[key] = float(m.group(3)) if "." in m.group(3) else int(float(m.group(3)))
-            except ValueError:
-                pass
-    return result
+def _extract_metrics(data: Any) -> dict[str, Any]:
+    """Extract known metric fields from evidence data."""
+    metrics: dict[str, Any] = {}
+
+    if not isinstance(data, dict):
+        return metrics
+
+    # Common metric keys we look for
+    metric_keys = [
+        "fp_rate", "false_positive_rate",
+        "detection_rate", "recall", "precision",
+        "f1", "f1_score",
+        "auc", "auc_roc",
+        "accuracy",
+        "test_count", "tests_passed", "tests_failed", "total_tests",
+        "rules_count", "findings_count",
+        "model_count", "scan_count",
+    ]
+
+    for key in metric_keys:
+        if key in data:
+            metrics[key] = data[key]
+
+    # Check nested "metrics" or "results" keys
+    for nested_key in ("metrics", "results", "summary", "stats"):
+        if nested_key in data and isinstance(data[nested_key], dict):
+            for key in metric_keys:
+                if key in data[nested_key]:
+                    metrics[key] = data[nested_key][key]
+
+    return metrics
 
 
 # ---------------------------------------------------------------------------
-# GET /health  — proxy health
+# GET /health  — unauthenticated health check
 # ---------------------------------------------------------------------------
+
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "proxy": "dashboard_server", "version": "2.0.0"}
+    """Basic health check (no auth required)."""
+    return {"status": "ok", "service": "mlsec-dashboard-hub", "version": "3.0.0"}
 
 
 # ---------------------------------------------------------------------------
-# SSE /sse/mcp  — live MCP gateway metrics + health
+# GET /  — serve main dashboard
 # ---------------------------------------------------------------------------
 
-@app.get("/sse/mcp")
-async def sse_mcp():
-    """Stream MCP gateway metrics every POLL_INTERVAL seconds."""
 
-    async def generate() -> AsyncIterator[str]:
-        yield sse("connected", {"proxy": "dashboard_server", "mcp_base": MCP_BASE})
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            while True:
-                ts = time.time()
-                try:
-                    h_resp = await client.get(f"{MCP_BASE}/v1/health")
-                    m_resp = await client.get(f"{MCP_BASE}/v1/metrics")
-
-                    health_data = h_resp.json() if h_resp.status_code == 200 else {}
-                    metrics_raw = m_resp.text if m_resp.status_code == 200 else ""
-                    metrics = parse_prometheus(metrics_raw)
-
-                    # extract p99 latency from histogram
-                    p99 = _p99_from_prometheus(metrics_raw)
-
-                    payload = {
-                        "ts": ts,
-                        "connected": True,
-                        "health": health_data,
-                        "metrics": metrics,
-                        "p99_ms": round(p99 * 1000, 2) if p99 is not None else None,
-                        "request_total": metrics.get("mcp_request_total", 0),
-                        "error_total": metrics.get("mcp_error_total", 0),
-                        "active_requests": metrics.get("mcp_active_requests", 0),
-                        "circuit_inspect_call": _circuit_label(metrics, "inspect_call"),
-                        "circuit_inspect_output": _circuit_label(metrics, "inspect_output"),
-                    }
-                    yield sse("metrics", payload)
-
-                except httpx.ConnectError:
-                    yield sse("disconnected", {
-                        "ts": ts,
-                        "connected": False,
-                        "message": f"MCP gateway not reachable at {MCP_BASE}. "
-                                   "Run: pip install -e \".[server]\" && mcp-gateway"
-                    })
-                except Exception as exc:
-                    yield sse("error", {"ts": ts, "error": str(exc)})
-
-                await asyncio.sleep(POLL_INTERVAL)
-
-    return StreamingResponse(generate(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-
-
-def _p99_from_prometheus(text: str) -> float | None:
-    """Extract approximate p99 from histogram buckets."""
-    buckets: list[tuple[float, int]] = []
-    total_count = 0
-    for line in text.splitlines():
-        m = re.match(r'mcp_request_duration_seconds_bucket\{le="([^"]+)"\}\s+(\d+)', line)
-        if m:
-            le = float("inf") if m.group(1) == "+Inf" else float(m.group(1))
-            buckets.append((le, int(m.group(2))))
-        m2 = re.match(r'^mcp_request_duration_seconds_count\s+(\d+)$', line)
-        if m2:
-            total_count = int(m2.group(1))
-    if not buckets or total_count == 0:
-        return None
-    target = total_count * 0.99
-    for le, count in buckets:
-        if count >= target:
-            return le
-    return None
-
-
-def _circuit_label(metrics: dict, name: str) -> str:
-    key = f'mcp_circuit_breaker_state{{layer="{name}"}}'
-    val = metrics.get(key, 0)
-    return {0: "closed", 1: "open", 2: "half_open"}.get(int(val), "unknown")
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    """Serve the main dashboard index.html."""
+    index_path = BASE_DIR / "index.html"
+    if index_path.is_file():
+        return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+    return HTMLResponse(content="<h1>ML Security Dashboard Hub</h1><p>No index.html found.</p>")
 
 
 # ---------------------------------------------------------------------------
-# POST /api/mcp/inspect  — forward a tool call to the live MCP gateway
+# GET /api/status  — repo evidence status (authenticated)
 # ---------------------------------------------------------------------------
 
-@app.post("/api/mcp/inspect")
-async def mcp_inspect(payload: dict):
-    """Forward a tool call to POST /v1/inspect_call on the MCP gateway."""
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        try:
-            resp = await client.post(f"{MCP_BASE}/v1/inspect_call", json=payload)
-            return resp.json()
-        except httpx.ConnectError:
-            return {"error": f"MCP gateway not reachable at {MCP_BASE}", "connected": False}
-
-
-# ---------------------------------------------------------------------------
-# SSE /sse/hf-scan  — stream hf-scanner results
-# ---------------------------------------------------------------------------
-
-@app.get("/sse/hf-scan")
-async def sse_hf_scan(
-    model_id: str = Query(..., description="HuggingFace model ID, e.g. bert-base-uncased"),
-    token: str = Query("", description="HF API token (optional)"),
-):
-    """
-    Run hf-scanner against a real model ID and stream results as SSE.
-    Requires: pip install hf-scanner  (or pip install hf-model-provenance-scanner)
-    """
-
-    async def generate() -> AsyncIterator[str]:
-        yield sse("started", {"model_id": model_id, "ts": time.time()})
-
-        cmd = ["hf-scanner", model_id, "--format", "json", "--verbose"]
-        if token:
-            cmd += ["--token", token]
-
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        except FileNotFoundError:
-            yield sse_error(
-                "hf-scanner not found. Install: pip install hf-model-provenance-scanner"
-            )
-            return
-
-        # Stream stderr lines as progress events
-        assert proc.stderr is not None
-        assert proc.stdout is not None
-
-        async def stream_stderr():
-            async for line in proc.stderr:
-                text = line.decode("utf-8", errors="replace").rstrip()
-                if text:
-                    yield sse("progress", {"line": text})
-
-        stderr_lines = []
-        async for frame in stream_stderr():
-            yield frame
-
-        stdout, _ = await proc.communicate()
-        rc = proc.returncode
-
-        if rc != 0:
-            yield sse_error(f"hf-scanner exited with code {rc}")
-            return
-
-        try:
-            result = json.loads(stdout.decode("utf-8"))
-            yield sse("result", result)
-            yield sse("done", {"model_id": model_id, "ts": time.time()})
-        except json.JSONDecodeError as exc:
-            yield sse_error(f"Could not parse hf-scanner output: {exc}")
-
-    return StreamingResponse(generate(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-
-
-# ---------------------------------------------------------------------------
-# SSE /sse/llm-eval  — stream redteam-eval
-# ---------------------------------------------------------------------------
-
-@app.get("/sse/llm-eval")
-async def sse_llm_eval(
-    split_mode: str = Query("grouped", description="grouped or random"),
-    seed: int = Query(42),
-):
-    """
-    Run redteam-eval and stream stdout as SSE.
-    Requires: pip install llm-redteam-framework
-    """
-
-    async def generate() -> AsyncIterator[str]:
-        yield sse("started", {"split_mode": split_mode, "seed": seed, "ts": time.time()})
-
-        cmd = [
-            sys.executable, "-m", "redteam.eval.harness",
-            "--split-mode", split_mode,
-            "--seed", str(seed),
-            "--output", "-",   # stdout
-        ]
-
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        except FileNotFoundError:
-            # Try the entry-point script instead
-            try:
-                proc = await asyncio.create_subprocess_exec(
-                    "redteam-eval",
-                    "--split-mode", split_mode,
-                    "--seed", str(seed),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-            except FileNotFoundError:
-                yield sse_error(
-                    "redteam-eval not found. Install: pip install llm-redteam-framework"
-                )
-                return
-
-        assert proc.stderr is not None
-        assert proc.stdout is not None
-
-        # Stream stderr progress
-        async for line in proc.stderr:
-            text = line.decode("utf-8", errors="replace").rstrip()
-            if text:
-                yield sse("progress", {"line": text})
-
-        stdout, _ = await proc.communicate()
-        rc = proc.returncode
-
-        if rc != 0:
-            yield sse_error(f"redteam-eval exited with code {rc}")
-            return
-
-        raw = stdout.decode("utf-8").strip()
-        # Try JSON parse first
-        try:
-            result = json.loads(raw)
-            yield sse("result", result)
-        except json.JSONDecodeError:
-            # Fall back: emit raw lines
-            for line in raw.splitlines():
-                yield sse("progress", {"line": line})
-            yield sse("result", {"raw": raw})
-
-        yield sse("done", {"ts": time.time()})
-
-    return StreamingResponse(generate(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-
-
-# ---------------------------------------------------------------------------
-# SSE /sse/adv-eval  — stream adversarial ML lab eval
-# ---------------------------------------------------------------------------
-
-@app.get("/sse/adv-eval")
-async def sse_adv_eval(attack: str = Query("pgd", description="fgsm, pgd, or cw")):
-    """Run adversarial-ml-lab eval script and stream results."""
-
-    async def generate() -> AsyncIterator[str]:
-        yield sse("started", {"attack": attack, "ts": time.time()})
-        cmd = [sys.executable, "-m", "adv_lab.eval", "--attack", attack, "--json"]
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        except FileNotFoundError:
-            yield sse_error("adversarial-ml-lab not installed. pip install adversarial-ml-lab")
-            return
-
-        assert proc.stderr is not None
-        assert proc.stdout is not None
-
-        async for line in proc.stderr:
-            text = line.decode("utf-8", errors="replace").rstrip()
-            if text:
-                yield sse("progress", {"line": text})
-
-        stdout, _ = await proc.communicate()
-        if proc.returncode != 0:
-            yield sse_error(f"adv eval exited {proc.returncode}")
-            return
-        try:
-            yield sse("result", json.loads(stdout))
-        except json.JSONDecodeError:
-            yield sse("result", {"raw": stdout.decode()})
-        yield sse("done", {"ts": time.time()})
-
-    return StreamingResponse(generate(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-
-
-# ---------------------------------------------------------------------------
-# SSE /sse/poison-eval  — dataset poisoning detector
-# ---------------------------------------------------------------------------
-
-@app.get("/sse/poison-eval")
-async def sse_poison_eval(method: str = Query("spectral", description="spectral or influence")):
-    """Run dataset-poisoning-detector and stream results."""
-
-    async def generate() -> AsyncIterator[str]:
-        yield sse("started", {"method": method, "ts": time.time()})
-        cmd = [sys.executable, "-m", "poisoning.eval", "--method", method, "--json"]
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        except FileNotFoundError:
-            yield sse_error("dataset-poisoning-detector not installed. pip install dataset-poisoning-detector")
-            return
-
-        assert proc.stderr is not None
-        assert proc.stdout is not None
-
-        async for line in proc.stderr:
-            text = line.decode("utf-8", errors="replace").rstrip()
-            if text:
-                yield sse("progress", {"line": text})
-
-        stdout, _ = await proc.communicate()
-        if proc.returncode != 0:
-            yield sse_error(f"poison eval exited {proc.returncode}")
-            return
-        try:
-            yield sse("result", json.loads(stdout))
-        except json.JSONDecodeError:
-            yield sse("result", {"raw": stdout.decode()})
-        yield sse("done", {"ts": time.time()})
-
-    return StreamingResponse(generate(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
-
-
-# ---------------------------------------------------------------------------
-# GET /api/status  — which tools are installed and reachable
-# ---------------------------------------------------------------------------
 
 @app.get("/api/status")
-async def api_status():
-    """Check which tools are installed and whether MCP is reachable."""
-    import shutil
+async def api_status(_: str = Depends(verify_api_key)):
+    """
+    Check which sibling repos exist locally and have evidence files.
+    Returns availability status for each known repo.
+    """
+    status: dict[str, Any] = {}
 
-    tools = {
-        "hf-scanner":    shutil.which("hf-scanner") is not None,
-        "redteam-eval":  shutil.which("redteam-eval") is not None,
-        "mcp-gateway":   shutil.which("mcp-gateway") is not None,
-    }
+    for repo_name in SIBLING_REPOS:
+        repo_path = REPOS_DIR / repo_name
+        repo_exists = repo_path.is_dir()
+        evidence_files = _find_evidence_files(repo_name) if repo_exists else []
 
-    # Check MCP reachability
-    mcp_up = False
-    try:
-        async with httpx.AsyncClient(timeout=1.5) as client:
-            r = await client.get(f"{MCP_BASE}/v1/health")
-            mcp_up = r.status_code == 200
-    except Exception:
-        pass
+        status[repo_name] = {
+            "exists": repo_exists,
+            "evidence_file_count": len(evidence_files),
+            "evidence_files": [str(f.relative_to(REPOS_DIR)) for f in evidence_files[:20]],
+        }
 
     return {
-        "proxy": "ok",
-        "tools": tools,
-        "mcp_reachable": mcp_up,
-        "mcp_base": MCP_BASE,
+        "repos": status,
+        "repos_dir": str(REPOS_DIR),
         "ts": time.time(),
     }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/metrics  — aggregated metrics (authenticated)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/metrics")
+async def api_metrics(_: str = Depends(verify_api_key)):
+    """
+    Aggregate test counts, FP rates, detection rates from evidence JSON files
+    across all sibling repos.
+    """
+    aggregated: dict[str, Any] = {}
+
+    for repo_name in SIBLING_REPOS:
+        evidence_files = _find_evidence_files(repo_name)
+        if not evidence_files:
+            continue
+
+        repo_metrics: dict[str, Any] = {
+            "files_scanned": len(evidence_files),
+            "metrics": {},
+        }
+
+        for evidence_file in evidence_files:
+            data = _safe_read_json(evidence_file)
+            if data is None:
+                continue
+
+            extracted = _extract_metrics(data)
+            if extracted:
+                file_key = evidence_file.stem
+                repo_metrics["metrics"][file_key] = extracted
+
+        # Compute aggregate stats for this repo
+        all_fp_rates = []
+        all_detection_rates = []
+        total_tests = 0
+
+        for file_metrics in repo_metrics["metrics"].values():
+            for key in ("fp_rate", "false_positive_rate"):
+                if key in file_metrics and isinstance(file_metrics[key], (int, float)):
+                    all_fp_rates.append(file_metrics[key])
+            for key in ("detection_rate", "recall"):
+                if key in file_metrics and isinstance(file_metrics[key], (int, float)):
+                    all_detection_rates.append(file_metrics[key])
+            for key in ("test_count", "total_tests"):
+                if key in file_metrics and isinstance(file_metrics[key], int):
+                    total_tests += file_metrics[key]
+
+        repo_metrics["summary"] = {
+            "avg_fp_rate": (
+                round(sum(all_fp_rates) / len(all_fp_rates), 4)
+                if all_fp_rates
+                else None
+            ),
+            "avg_detection_rate": (
+                round(sum(all_detection_rates) / len(all_detection_rates), 4)
+                if all_detection_rates
+                else None
+            ),
+            "total_tests": total_tests if total_tests > 0 else None,
+        }
+
+        aggregated[repo_name] = repo_metrics
+
+    return {
+        "repos": aggregated,
+        "total_repos_with_evidence": len(aggregated),
+        "ts": time.time(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Static file serving for project dashboards
+# ---------------------------------------------------------------------------
+
+# Mount static dashboard subdirectories
+_dashboard_dirs = [
+    "aws-agent-identity-guard",
+    "hf-model-provenance-scanner",
+    "mcp-security-gateway-monitor",
+    "llm-redteam-framework",
+    "model-privacy-attacks",
+    "adversarial-ml-lab",
+    "PulseNet-RUL-Forecasting",
+    "attack-v19-core",
+    "dataset-poisoning-detector",
+    "ml-security-command-center",
+    "mlsec-benchmark-suite",
+    "unified-ml-security-platform",
+    "attack-detection-engine",
+    "shared",
+]
+
+for _dir_name in _dashboard_dirs:
+    _dir_path = BASE_DIR / _dir_name
+    if _dir_path.is_dir():
+        app.mount(
+            f"/{_dir_name}",
+            StaticFiles(directory=str(_dir_path), html=True),
+            name=_dir_name,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -455,7 +331,17 @@ async def api_status():
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"\n  mlsec dashboard server → http://localhost:{PROXY_PORT}")
-    print(f"  Polling MCP gateway at  → {MCP_BASE}\n")
-    uvicorn.run("dashboard_server:app", host="127.0.0.1", port=PROXY_PORT,
-                reload=False, log_level="info")
+
+    if not API_KEY:
+        print("\n  WARNING: DASHBOARD_API_KEY not set. API endpoints will return 500.")
+        print("  Set it:  export DASHBOARD_API_KEY=your-secret-key\n")
+
+    print("\n  ML Security Dashboard Hub → http://localhost:8080")
+    print("  Serving static dashboards + metrics API\n")
+    uvicorn.run(
+        "dashboard_server:app",
+        host="127.0.0.1",
+        port=8080,
+        reload=False,
+        log_level="info",
+    )
