@@ -1,24 +1,64 @@
-# ⚠️ ARCHIVED — Security audit recommends deprecation (see SECURITY_AUDIT.md)
+# ML Security Dashboard Hub
 
-> **This repository is archived and should not be used in production or development.**
+Unified dashboard for all ML security portfolio tool metrics. Serves static project dashboards and aggregates evidence data from sibling repositories via a secure API.
 
-## Critical Security Vulnerabilities
+## Install
 
-The dashboard server in this repository has **critical security vulnerabilities**, including **unauthenticated subprocess execution**. An attacker with network access to the dashboard can execute arbitrary commands on the host without any authentication.
+```bash
+pip install fastapi uvicorn
+```
 
-## Recommended Alternatives
+## Usage
 
-Use one of the following instead:
+```bash
+# Set your API key (required for /api/* endpoints)
+export DASHBOARD_API_KEY=your-secret-key
 
-- **[Grafana](https://grafana.com/)** — Production-grade dashboarding with built-in authentication, RBAC, and audit logging.
-- **[Streamlit](https://streamlit.io/)** — Lightweight Python dashboards with proper session management and no subprocess exposure.
+# Start the server
+uvicorn dashboard_server:app --port 8080
+```
 
-Both are referenced in the unified ML Security Platform architecture (`unified-ml-security-platform`).
+Then open http://localhost:8080 in your browser.
 
-## What This Was
+## API Endpoints
 
-This repository was an experimental ML security metrics dashboard that attempted to provide a lightweight web UI for visualizing ATT&CK detection coverage, model scan results, and pipeline health. It was never hardened for production use.
+All `/api/*` endpoints require an `X-API-Key` header matching `DASHBOARD_API_KEY`.
 
----
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /` | No | Main dashboard HTML |
+| `GET /health` | No | Health check |
+| `GET /api/status` | Yes | Which sibling repos exist and have evidence files |
+| `GET /api/metrics` | Yes | Aggregated test counts, FP rates, detection rates |
 
-*See `SECURITY_AUDIT.md` for the full findings.*
+### Example
+
+```bash
+curl -H "X-API-Key: your-secret-key" http://localhost:8080/api/metrics
+```
+
+## Features
+
+- **Token authentication** — API key via `X-API-Key` header from environment variable
+- **CORS restricted to localhost** — No wildcard origins
+- **Real metrics aggregation** — Reads evidence JSON from sibling repos
+- **Static dashboard serving** — Each project's dashboard served at `/<project-name>/`
+- **No subprocess execution** — All RCE vectors from the previous version removed
+- **Proper error handling** — Structured error responses with appropriate HTTP status codes
+
+## Static Dashboards
+
+Each project has its own dashboard served as static HTML:
+
+- `/aws-agent-identity-guard/`
+- `/hf-model-provenance-scanner/`
+- `/mcp-security-gateway-monitor/`
+- `/llm-redteam-framework/`
+- `/adversarial-ml-lab/`
+- `/dataset-poisoning-detector/`
+- `/PulseNet-RUL-Forecasting/`
+- `/attack-v19-core/`
+
+## Security
+
+See `SECURITY_AUDIT.md` for audit history. All critical and high findings from the v2.0 audit have been remediated in v3.0.
