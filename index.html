@@ -287,6 +287,22 @@ body { padding-top: 0; }
 .rtype-smoke    { color: var(--muted);  border-color: rgba(122,130,153,.35); background: rgba(122,130,153,.06); }
 .rtype-viz      { color: var(--dim);    border-color: rgba(74,80,104,.5);   background: rgba(74,80,104,.08); }
 .rtype-ics      { color: var(--pink);   border-color: rgba(244,114,182,.35); background: rgba(244,114,182,.06); }
+.rtype-archived { color: var(--dim);    border-color: rgba(122,130,153,.3);  background: rgba(122,130,153,.05); }
+
+/* Archived cards — visually distinct but present (honest: it existed, not pretending otherwise) */
+.repo-card[data-status="archived"] {
+  opacity: 0.55;
+  border-style: dashed;
+}
+.repo-card[data-status="archived"]:hover {
+  opacity: 0.75;
+  border-color: var(--dim);
+  transform: none;
+}
+.repo-card[data-status="archived"] h4 {
+  text-decoration: line-through;
+  text-decoration-color: rgba(122,130,153,.5);
+}
 
 .repo-metric {
   font-size: 0.72rem;
@@ -364,7 +380,7 @@ body { padding-top: 0; }
     <div class="fc-metrics">
       <div class="fc-metric">
         <div class="val ds-counter" data-target="100" data-suffix="%">0%</div>
-        <div class="lbl">Detection rate</div>
+        <div class="lbl">Block rate (33/33)</div>
       </div>
       <div class="fc-metric">
         <div class="val ds-counter" data-target="33">0</div>
@@ -491,9 +507,9 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>PulseNet RUL Forecasting</h4>
       </div>
-      <p>ICS/OT equipment RUL prediction. NASA C-MAPSS benchmarks. F1=0.54, P99 4.3ms inference.</p>
+      <p>Archived experimental project — not actively maintained. ICS/OT equipment RUL prediction on NASA C-MAPSS benchmarks. F1=0.54, P99 4.3ms inference. Not a production system.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-ics">ICS/OT</span>
+        <span class="repo-type-badge rtype-archived">ARCHIVED</span>
         <span class="repo-metric text-muted">F1=0.54</span>
       </div>
     </a>
