@@ -42,7 +42,7 @@ SIBLING_REPOS = [
     "llm-redteam-framework",
     "model-privacy-attacks",
     "adversarial-ml-lab",
-    "PulseNet-RUL-Forecasting",
+    # "PulseNet-RUL-Forecasting",  # ARCHIVED — not an active security product
     "attack-v19-core",
     "dataset-poisoning-detector",
 ]
@@ -305,7 +305,7 @@ _dashboard_dirs = [
     "llm-redteam-framework",
     "model-privacy-attacks",
     "adversarial-ml-lab",
-    "PulseNet-RUL-Forecasting",
+    # "PulseNet-RUL-Forecasting",  # ARCHIVED — not an active security product
     "attack-v19-core",
     "dataset-poisoning-detector",
     "ml-security-command-center",
