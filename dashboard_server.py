@@ -38,7 +38,7 @@ REPOS_DIR = BASE_DIR.parent  # sibling repos are in the parent directory
 SIBLING_REPOS = [
     "aws-agent-identity-guard",
     "hf-model-provenance-scanner",
-    "mcp-security-gateway-monitor",
+    "mcp-agent-security-gateway",
     "llm-redteam-framework",
     "model-privacy-attacks",
     "adversarial-ml-lab",
@@ -301,7 +301,7 @@ async def api_metrics(_: str = Depends(verify_api_key)):
 _dashboard_dirs = [
     "aws-agent-identity-guard",
     "hf-model-provenance-scanner",
-    "mcp-security-gateway-monitor",
+    "mcp-agent-security-gateway",
     "llm-redteam-framework",
     "model-privacy-attacks",
     "adversarial-ml-lab",

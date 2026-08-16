@@ -116,7 +116,7 @@ Open your browser and navigate to:
 | `http://localhost:8080/attack-v19-core/` | ATT&CK v19 dashboard |
 | `http://localhost:8080/ml-security-command-center/` | Command center dashboard |
 | `http://localhost:8080/mlsec-benchmark-suite/` | Benchmark suite dashboard |
-| `http://localhost:8080/mcp-security-gateway-monitor/` | MCP gateway dashboard |
+| `http://localhost:8080/mcp-agent-security-gateway/` | MCP gateway dashboard |
 | `http://localhost:8080/unified-ml-security-platform/` | Unified platform dashboard |
 
 **Hosted version (no server needed):**
