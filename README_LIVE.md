@@ -35,11 +35,11 @@ The proxy runs on **port 9001**. All dashboards automatically detect it and swit
 ## What each dashboard does live
 
 ### MCP Security Gateway Monitor
-**Requires:** `pip install -e ".[server]"` in mcp-security-gateway-monitor
+**Requires:** `pip install -e ".[server]"` in mcp-agent-security-gateway
 
 ```bash
 # Terminal 1: start the gateway
-cd mcp-security-gateway-monitor
+cd mcp-agent-security-gateway
 pip install -e ".[server]"
 mcp-gateway
 
