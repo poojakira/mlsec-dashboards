@@ -14,13 +14,6 @@
   padding:10px 14px; outline:none;
 }
 .scan-input:focus { border-color:var(--blue); }
-.token-input {
-  width:180px;
-  background:var(--surface2); border:1px solid var(--border); border-radius:6px;
-  color:var(--text); font-family:var(--mono); font-size:.82rem;
-  padding:10px 12px; outline:none;
-}
-.token-input:focus { border-color:var(--blue); }
 .scan-btn {
   background:var(--teal); color:#000; border:none; border-radius:6px;
   padding:10px 22px; font-size:.85rem; font-weight:700; cursor:pointer;
@@ -105,11 +98,10 @@
     <div class="scan-form">
       <input class="scan-input" id="model-input" type="text"
         placeholder="e.g. bert-base-uncased, gpt2, mistralai/Mistral-7B-v0.1" autocomplete="off">
-      <input class="token-input" id="token-input" type="password" placeholder="HF token (optional)">
       <button class="scan-btn" id="scan-btn">Scan model →</button>
     </div>
     <div style="margin-top:8px;font-size:.7rem;color:var(--dim)">
-      Fetches real file list from HuggingFace Hub and runs all 5 engines. Private models require a token.
+Legacy live scan UI. The tracked v3 server does not accept browser-supplied HF tokens or query-string secrets.
     </div>
   </div>
 
@@ -242,7 +234,6 @@ function escHtml(s) {
 // Run scan
 document.getElementById('scan-btn').addEventListener('click', () => {
   const modelId = document.getElementById('model-input').value.trim();
-  const token   = document.getElementById('token-input').value.trim();
   if (!modelId) { document.getElementById('model-input').focus(); return; }
 
   const btn = document.getElementById('scan-btn');
@@ -253,7 +244,6 @@ document.getElementById('scan-btn').addEventListener('click', () => {
 
   const startMs = Date.now();
   let url = `${PROXY}/sse/hf-scan?model_id=${encodeURIComponent(modelId)}`;
-  if (token) url += `&token=${encodeURIComponent(token)}`;
 
   const es = new EventSource(url);
 
