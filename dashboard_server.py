@@ -14,6 +14,7 @@ Environment Variables:
 
 from __future__ import annotations
 
+import hmac
 import json
 import os
 import time
@@ -89,7 +90,7 @@ async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
             status_code=500,
             detail="Server misconfigured: DASHBOARD_API_KEY environment variable not set.",
         )
-    if not api_key or api_key != API_KEY:
+    if not api_key or not hmac.compare_digest(api_key, API_KEY):
         raise HTTPException(status_code=401, detail="Invalid or missing API key.")
     return api_key
 
