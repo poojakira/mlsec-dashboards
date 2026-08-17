@@ -100,7 +100,25 @@ Expected response for metrics: JSON with aggregated portfolio metrics.
 
 ---
 
-## Step 5: Access Dashboards in Browser
+## Step 5: Run Tests
+
+**Windows (PowerShell):**
+```powershell
+.\.venv\Scripts\python.exe -m pip install httpx pytest -q
+.\.venv\Scripts\python.exe -m pytest tests/ -q --tb=short
+```
+
+**Linux/macOS:**
+```bash
+pip install httpx pytest
+pytest tests/ -q --tb=short
+```
+
+Expected: `22 passed`
+
+---
+
+## Step 6: Access Dashboards in Browser
 
 Open your browser and navigate to:
 
