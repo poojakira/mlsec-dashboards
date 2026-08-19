@@ -1,6 +1,6 @@
 # mlsec-dashboards
 
-FastAPI server aggregating evidence metrics from sibling ML security repos. Authenticated API endpoints serve portfolio metrics from committed JSON artifacts. Internal tooling — not a product.
+FastAPI server aggregating evidence metrics from sibling ML security repos. Authenticated API endpoints serve portfolio metrics from committed JSON artifacts. Internal tooling  -  not a product.
 
 ```bash
 pip install fastapi uvicorn
