@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 ## Start Server
 ```bash
-uvicorn app.main:app --reload --port 8000
+python dashboard_server.py
 ```
 Server runs at `http://localhost:8000`. API docs at `/docs`.
 
