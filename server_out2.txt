@@ -1,1 +1,0 @@
-INFO:     127.0.0.1:50188 - "GET /api/status HTTP/1.1" 200 OK
