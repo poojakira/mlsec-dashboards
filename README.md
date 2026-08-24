@@ -1,80 +1,270 @@
 # mlsec-dashboards
 
-FastAPI server that serves per-repo metrics dashboards for the ML security portfolio. API-key authenticated, CORS-enabled, with a shared design system across 12 dashboard pages.
+**A FastAPI server that turns scattered ML security evidence files into browsable, authenticated dashboards for 12+ portfolio repositories.**
 
-## What It Does
+---
 
-- Serves static HTML dashboards for each portfolio repo (test counts, rule counts, status)
-- Aggregates evidence files (results, metrics, reports) from sibling repos
-- Exposes REST endpoints for programmatic metrics access
-- Shared CSS/JS design system for consistent styling
+## The Problem in 30 Seconds
 
-## Dashboards Served
+You have a dozen ML security tools. Each produces its own JSON evidence: detection rates, false positive rates, test counts, benchmark results. Showing this to someone means opening 12 repos, grepping for JSON files, and hoping you remember which metric lives where.
+
+Imagine a hiring manager or security lead asks: "Show me what your tools actually detect." You need one URL, one view, with honest numbers pulled from real test runs. That is what this server does.
+
+---
+
+## Executive Summary
+
+**Who this is for:** ML security engineers who maintain a portfolio of security tools and need a single place to present evidence from actual benchmarks, not marketing slides.
+
+**What problem it solves:** It aggregates JSON evidence files from sibling repositories, serves per-project HTML dashboards with a shared design system, and exposes authenticated REST endpoints for programmatic access to metrics. The dashboards are deliberately honest: weak results (ROC-AUC 0.54, F1 drops from 0.93 to 0.70) are shown alongside strong ones, with limitations explained rather than hidden.
+
+---
+
+## Why This Repository Exists
+
+Most portfolio sites show polished demos. This one shows raw numbers from test runs. It exists to answer:
+
+- What detection rates does each tool actually achieve?
+- Where are the gaps? Which attacks are missed?
+- How do benchmark results change between curated and out-of-distribution data?
+- Can someone browse all 12 projects from one page without cloning anything?
+- Can I get aggregated metrics programmatically (CI integration, status checks)?
+
+---
+
+## Architecture Overview
 
 ```
-/                                    Main portfolio overview
-/aws-agent-identity-guard/           IAM rule scanner metrics
-/hf-model-provenance-scanner/        Model provenance dashboard
-/mcp-agent-security-gateway/         MCP gateway metrics
-/llm-redteam-framework/              Red team framework status
-/adversarial-ml-lab/                  Adversarial ML metrics
-/dataset-poisoning-detector/         Poisoning detector status
-/model-privacy-attacks/              Privacy attack metrics
-/attack-v19-core/                    ATT&CK v19 library status
-/attack-detection-engine/            Detection engine dashboard
-/PulseNet-RUL-Forecasting/          PulseNet metrics
-/unified-ml-security-platform/       Platform integration status
+                         +-------------------+
+                         |   Browser / CLI   |
+                         +--------+----------+
+                                  |
+                    HTTP (localhost:8080)
+                                  |
+                         +--------v----------+
+                         |   FastAPI Server   |
+                         |  dashboard_server  |
+                         |      .py          |
+                         +---+----+-----+----+
+                             |    |     |
+              +--------------+    |     +--------------+
+              |                   |                    |
+     +--------v------+  +--------v------+  +----------v--------+
+     | Static HTML   |  | /api/metrics  |  | /api/status       |
+     | Dashboards    |  | (aggregated)  |  | (repo discovery)  |
+     | (12 repos +   |  +--------+------+  +----------+--------+
+     |  index.html)  |           |                    |
+     +--------+------+           |                    |
+              |            +-----v--------------------v-----+
+              |            |  Sibling Repo Evidence Files    |
+              |            |  (../repo-name/evidence/*.json) |
+              |            +--------------------------------+
+              |
+     +--------v-----------+
+     | shared/             |
+     |  design-system.css  |
+     |  dashboard.js       |
+     +--------------------+
 ```
 
-## Quick Start
+**Component Responsibilities:**
+
+| Component | Responsibility |
+|-----------|---------------|
+| `dashboard_server.py` | FastAPI app: auth, CORS, evidence file discovery, metrics aggregation, static file serving |
+| `index.html` | Main portfolio overview page with cards for all 13 repos, category filters, honesty notes |
+| `shared/design-system.css` | Unified dark-theme design system (CSS custom properties, grid layouts, stat cards, tables) |
+| `shared/dashboard.js` | Client-side utilities: animated counters, sortable/filterable tables, tab switching, live scan demo |
+| `<repo-name>/index.html` | Per-project dashboard pages with embedded benchmark data |
+| `tests/` | pytest suite covering auth, health, metrics extraction, JSON parsing |
+
+---
+
+## End-to-End Workflow
+
+1. **Evidence generation**: Each sibling repo (e.g., `hf-model-provenance-scanner`) runs its benchmarks and writes JSON results to `evidence/`, `results/`, or `metrics/` directories.
+
+2. **Server startup**: `dashboard_server.py` launches, mounts each `<repo-name>/` subdirectory as a static file route, and scans sibling directories for JSON evidence.
+
+3. **Static dashboards**: Visiting `/mcp-agent-security-gateway/` serves that project's `index.html`, which imports the shared design system and renders pre-embedded benchmark data with animated counters and filterable tables.
+
+4. **API aggregation**: `GET /api/metrics` (authenticated) walks all known sibling repos, reads their JSON evidence files, extracts standardized metric keys (fp_rate, detection_rate, f1, test_count, etc.), and returns aggregated summaries.
+
+5. **Status discovery**: `GET /api/status` reports which sibling repos exist locally and how many evidence files each contains.
+
+6. **Client rendering**: The shared `dashboard.js` handles intersection-observer-based counter animations, column sorting, category filtering, and tab switching without any framework dependency.
+
+---
+
+## Design Decisions and Trade-offs
+
+**Static HTML with embedded data, not a SPA with API calls.**
+The dashboards embed benchmark numbers directly in HTML. This means they work without a running server (open `index.html` in a browser), load instantly, and have zero JavaScript framework dependencies. The trade-off: updating numbers requires regenerating the HTML files.
+
+**No database.**
+Evidence lives as flat JSON files in sibling repos. The server reads them on demand. This avoids deployment complexity and keeps the source of truth in the repos that generate the data. The trade-off: every `/api/metrics` call scans the filesystem.
+
+**Honest reporting over marketing.**
+The index page explicitly states: "These are interactive evidence dashboards, not live security monitoring. Most data is static benchmark output embedded in HTML." Weak results (dataset-poisoning-detector at ROC-AUC 0.54, LLM redteam F1 dropping from 0.93 to 0.70 on transfer data) are shown as-is with explanations.
+
+**Shared design system without build tools.**
+One CSS file and one JS file, included via `<link>` and `<script>`. No bundler, no npm, no build step. This keeps the repo simple and makes individual dashboards self-contained. The trade-off: no tree-shaking, no TypeScript, no component framework.
+
+**CORS restricted to localhost.**
+The server is an internal development tool. CORS only allows `localhost:8080` and `localhost:3000`. This is intentional and documented.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.10+, FastAPI 0.141+, Uvicorn |
+| Frontend | Vanilla HTML/CSS/JS, no framework |
+| Design system | Custom CSS (dark theme, CSS custom properties) |
+| Auth | API key via `X-API-Key` header, constant-time comparison (hmac) |
+| Testing | pytest, httpx (via FastAPI TestClient) |
+| Linting | Ruff |
+
+### Installation
 
 ```bash
-pip install fastapi uvicorn
+git clone https://github.com/poojakira/mlsec-dashboards.git
+cd mlsec-dashboards
 
-# API key required for authenticated endpoints
-export DASHBOARD_API_KEY="your-key-here"
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+# source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+### Quick Start
+
+```bash
+# Set the API key (required for /api/* endpoints)
+export DASHBOARD_API_KEY="your-secret-key"
+
+# Start the server
 uvicorn dashboard_server:app --port 8080
 
-# Or open index.html directly for static view (no server needed)
+# Or run directly:
+python dashboard_server.py
 ```
 
-## API
+Open `http://localhost:8080` for the main dashboard.
+
+For a zero-server preview, open `index.html` directly in any browser.
+
+### Usage Examples
 
 ```bash
-# Health check
+# Health check (no auth required)
 curl http://localhost:8080/health
 
-# Aggregated metrics (requires API key)
+# Get aggregated metrics across all sibling repos
 curl -H "X-API-Key: $DASHBOARD_API_KEY" http://localhost:8080/api/metrics
+
+# Check which repos have evidence files
+curl -H "X-API-Key: $DASHBOARD_API_KEY" http://localhost:8080/api/status
+
+# Run tests
+pytest tests/ -v
 ```
 
-## Structure
+---
 
-```
-dashboard_server.py              FastAPI app (auth, CORS, evidence aggregation)
-index.html                       Main dashboard (20 KB)
-shared/
-  design-system.css              Shared styles (15 KB)
-  dashboard.js                   Shared JS (9 KB)
-<repo-name>/index.html           Per-repo dashboard pages (12 repos)
-tests/
-  test_dashboard_server.py       Server tests
-```
+## Security Considerations
 
-## Security
+- **Token-based authentication**: All `/api/*` endpoints require a valid `X-API-Key` header. Comparison uses `hmac.compare_digest` to prevent timing attacks.
+- **Server misconfiguration protection**: If `DASHBOARD_API_KEY` is not set, the server returns HTTP 500 rather than silently allowing unauthenticated access.
+- **No code execution**: The server never runs `subprocess`, `exec`, or `eval`. It only reads static JSON files from known directories.
+- **File size limits**: Evidence files larger than 10 MB are skipped to prevent memory exhaustion.
+- **CORS lockdown**: Only `localhost:8080` and `localhost:3000` origins are allowed. GET method only.
+- **No secrets in the repo**: API keys come from environment variables.
+- **Intended scope**: This is an internal development tool, not a production-facing service. It should not be exposed to the public internet.
 
-- Token-based auth via `DASHBOARD_API_KEY` env var (constant-time comparison)
-- CORS middleware configured
-- No subprocess execution — reads only static JSON evidence files
-- Internal development tool, not production-facing
+---
 
-## Dependencies
+## Evaluation Methods, Results, and Limitations
 
-```
-fastapi
-uvicorn
-```
+**How dashboards are evaluated:**
+Each per-project dashboard reports metrics from that project's actual test suite or benchmark run. The source data is JSON evidence files generated by CI or local test runs.
 
-## License
+**Key results shown across dashboards:**
 
-MIT
+| Project | Metric | Value | Context |
+|---------|--------|-------|---------|
+| MCP Security Gateway | Detection rate | 51% | 37 bundled attack scenarios |
+| HF Provenance Scanner | Block rate | 100% (33/33) | Internal fixture suite |
+| LLM Redteam Framework | F1 (curated) | 0.93 | Drops to 0.70 on transfer data |
+| Adversarial ML Lab | Clean accuracy | 72% | Drops to 23% under PGD attack |
+| Model Privacy Attacks | MI AUC | 0.87 | CIFAR-10 ResNet18 |
+| Dataset Poisoning Detector | ROC-AUC | ~0.54 | Near-baseline; target is 0.75 |
+| ATT&CK v19 Core | Tests passing | 18/18 | Data library, not detection tool |
+
+**Limitations:**
+- Most dashboard data is static benchmark output embedded in HTML, not live monitoring.
+- Only the MCP gateway has real-time capability when its server is running.
+- Metrics are from controlled benchmarks; real-world performance will differ.
+- The `/api/metrics` endpoint only finds evidence if sibling repos are cloned locally.
+
+---
+
+## Production Readiness Assessment
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| Authentication | Done | API key with constant-time compare |
+| Error handling | Partial | JSON parse failures return None gracefully; missing repos are reported |
+| Logging | Minimal | Uvicorn access logs only |
+| Rate limiting | Not implemented | Acceptable for localhost use |
+| HTTPS | Not included | Intended for local development |
+| Monitoring/alerting | None | No health check integrations |
+| CI/CD | Present | GitHub Actions directory exists |
+| Test coverage | Good | Auth, health, metrics extraction, JSON parsing all tested |
+| Documentation | Good | README, RUNBOOK, SECURITY docs present |
+
+**Verdict:** Production-ready for its intended purpose (local developer tool, portfolio demos). Not suitable for deployment as a public-facing service without adding HTTPS, rate limiting, structured logging, and proper secret management.
+
+---
+
+## Roadmap / Future Improvements
+
+- **Auto-refresh evidence**: Watch sibling repo directories for new JSON files and update metrics without server restart.
+- **WebSocket push**: Push real-time updates to open dashboard pages when evidence changes.
+- **Docker compose**: Single-command setup that clones sibling repos and starts the server.
+- **Structured logging**: JSON logs with request IDs for debugging.
+- **Evidence schema validation**: Validate incoming JSON against a defined schema rather than permissive key scanning.
+- **Dashboard generation from evidence**: Auto-generate per-repo HTML pages from evidence files instead of hand-crafting each one.
+- **HTTPS support**: Built-in TLS termination or reverse proxy configuration.
+- **Expand beyond 12 repos**: Make the dashboard list configurable rather than hardcoded.
+
+---
+
+## References
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [MITRE ATT&CK Framework v19](https://attack.mitre.org/)
+- [OWASP ML Security Top 10](https://owasp.org/www-project-machine-learning-security-top-10/)
+- [MCP (Model Context Protocol)](https://modelcontextprotocol.io/)
+- [HuggingFace Model Security](https://huggingface.co/docs/hub/security)
+- [Adversarial Robustness Toolbox](https://adversarial-robustness-toolbox.readthedocs.io/)
+
+---
+
+## License and Author
+
+**License:** MIT
+
+**Author:** Pooja Kiran  
+- GitHub: [github.com/poojakira](https://github.com/poojakira)  
+- LinkedIn: [linkedin.com/in/poojakiran](https://linkedin.com/in/poojakiran)
+
+---
+
+## Engineering Lessons
+
+The most useful thing this project demonstrates is that honesty scales better than polish. Showing a detection rate of 51% with clear gap analysis earns more trust than claiming 99% with no methodology. The same principle applies to the architecture: a flat file server with no database is the right tool when the requirement is "show benchmark results to humans." Over-engineering this into a React SPA with a Postgres backend would add deployment complexity without improving the core value: making evidence browsable.
