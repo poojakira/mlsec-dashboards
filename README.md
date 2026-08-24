@@ -1,34 +1,24 @@
 # mlsec-dashboards
 
-**A FastAPI server that turns scattered ML security evidence files into browsable, authenticated dashboards for 12+ portfolio repositories.**
+FastAPI server that aggregates JSON evidence files from 12+ ML security repos into browsable dashboards with authenticated API endpoints.
 
 ---
 
-## The Problem in 30 Seconds
+## What This Does
 
-You have a dozen ML security tools. Each produces its own JSON evidence: detection rates, false positive rates, test counts, benchmark results. Showing this to someone means opening 12 repos, grepping for JSON files, and hoping you remember which metric lives where.
+Each of my ML security tools produces JSON output from benchmarks and test runs. This server collects those files from sibling repo directories, renders per-project HTML dashboards, and exposes REST endpoints for programmatic access.
 
-Imagine a hiring manager or security lead asks: "Show me what your tools actually detect." You need one URL, one view, with honest numbers pulled from real test runs. That is what this server does.
-
----
-
-## Executive Summary
-
-**Who this is for:** ML security engineers who maintain a portfolio of security tools and need a single place to present evidence from actual benchmarks, not marketing slides.
-
-**What problem it solves:** It aggregates JSON evidence files from sibling repositories, serves per-project HTML dashboards with a shared design system, and exposes authenticated REST endpoints for programmatic access to metrics. The dashboards are deliberately honest: weak results (ROC-AUC 0.54, F1 drops from 0.93 to 0.70) are shown alongside strong ones, with limitations explained rather than hidden.
+The dashboards show actual numbers from real test runs. Weak results are shown alongside strong ones (e.g., ROC-AUC 0.54 on one attack type, F1 dropping from 0.93 to 0.70 on OOD data). The point is to have one URL where I can show someone what the tools actually detect, with honest numbers and stated limitations.
 
 ---
 
-## Why This Repository Exists
+## Features
 
-Most portfolio sites show polished demos. This one shows raw numbers from test runs. It exists to answer:
-
-- What detection rates does each tool actually achieve?
-- Where are the gaps? Which attacks are missed?
-- How do benchmark results change between curated and out-of-distribution data?
-- Can someone browse all 12 projects from one page without cloning anything?
-- Can I get aggregated metrics programmatically (CI integration, status checks)?
+- Discovers sibling repos and reads their `evidence/*.json` files
+- Per-project HTML dashboards with a shared design system
+- Aggregated metrics endpoint for CI integration
+- Token-based authentication on API routes
+- Shows gaps and weak results explicitly, not just highlights
 
 ---
 
