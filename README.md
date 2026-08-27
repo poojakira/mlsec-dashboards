@@ -249,7 +249,6 @@ Each per-project dashboard reports metrics from that project's actual test suite
 ## Additional Documentation
 
 - [INCIDENT_RUNBOOK.md](INCIDENT_RUNBOOK.md) - dashboard operational incident response
-- [	ests/test_dashboard_comprehensive.py](tests/test_dashboard_comprehensive.py) - 22 comprehensive endpoint tests
 
 ## License and Author
 
