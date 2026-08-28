@@ -1,324 +1,175 @@
 # Incident Runbook — mlsec-dashboards
 
-## Table of Contents
-1. [Dashboard Unavailable (5xx)](#1-dashboard-unavailable-5xx)
-2. [Authentication Service Failure](#2-authentication-service-failure)
-3. [Data Feed Stale / No Updates](#3-data-feed-stale--no-updates)
-4. [High Latency on Dashboard Load](#4-high-latency-on-dashboard-load)
-5. [WebSocket Disconnections](#5-websocket-disconnections)
-6. [Static Assets Not Loading](#6-static-assets-not-loading)
-7. [CORS Errors in Production](#7-cors-errors-in-production)
-8. [Memory/CPU Spike on Dashboard Service](#8-memorycpu-spike-on-dashboard-service)
-9. [Database Connection Pool Exhaustion](#9-database-connection-pool-exhaustion)
-10. [SSL/TLS Certificate Expiry](#10-ssltls-certificate-expiry)
+## What this is
 
----
+`mlsec-dashboards` is a **single-file local FastAPI dev tool** (`dashboard_server.py`)
+that serves static HTML dashboards and aggregates metrics from JSON evidence files in
+sibling repositories. It has:
 
-## 1. Dashboard Unavailable (5xx)
+- **No database, no message queue, no Kubernetes, no load balancer, no Flask** — it is a
+  plain FastAPI app run with `uvicorn` on `127.0.0.1:8080`.
+- **API-key auth** on the JSON API endpoints via the `X-API-Key` header, compared against
+  the `DASHBOARD_API_KEY` environment variable.
+- **CORS restricted to localhost** (ports 8080 and 3000 on `localhost`/`127.0.0.1`).
 
-**Severity:** P1 — Critical  
-**Impact:** All users cannot access the ML security dashboard.  
-**SLA:** Acknowledge within 5 minutes, resolve within 30 minutes.
+### Endpoints
+| Path | Auth | Purpose |
+|------|------|---------|
+| `GET /health` | none | Health check (`{"status": "ok", ...}`) |
+| `GET /` | none | Serves `index.html` |
+| `GET /api/status` | `X-API-Key` | Which sibling repos exist and have evidence files |
+| `GET /api/metrics` | `X-API-Key` | Aggregated metrics from sibling-repo JSON evidence |
+| `GET /<repo>/...` | none | Static files mounted per sibling-repo dashboard dir |
 
-### Symptoms
-- HTTP 500/502/503 responses from dashboard URL
-- Health check endpoint `/health` returning errors
-- Alerts from uptime monitoring (e.g., PagerDuty, Datadog)
-
-### Diagnosis Steps
-1. Check service status:
-   ```bash
-   kubectl get pods -n mlsec-dashboards
-   kubectl logs -n mlsec-dashboards deployment/dashboard-api --tail=100
-   ```
-2. Verify load balancer targets are healthy:
-   ```bash
-   aws elbv2 describe-target-health --target-group-arn <TG_ARN>
-   ```
-3. Check recent deployments:
-   ```bash
-   kubectl rollout history deployment/dashboard-api -n mlsec-dashboards
-   ```
-4. Verify database connectivity:
-   ```bash
-   kubectl exec -it <pod> -n mlsec-dashboards -- python -c "from app import db; db.check_connection()"
-   ```
-
-### Resolution
-- **If pods are crashing:** Check logs for OOM or unhandled exceptions. Roll back:
-  ```bash
-  kubectl rollout undo deployment/dashboard-api -n mlsec-dashboards
-  ```
-- **If load balancer issue:** Verify security groups and target group health check paths.
-- **If database issue:** See [Database Connection Pool Exhaustion](#9-database-connection-pool-exhaustion).
-
-### Post-Incident
-- Update status page
-- Write post-mortem within 48 hours
-- Add regression test for failure mode
-
----
-
-## 2. Authentication Service Failure
-
-**Severity:** P1 — Critical  
-**Impact:** No user can log in; existing sessions may be invalidated.  
-**SLA:** Acknowledge within 5 minutes, resolve within 30 minutes.
-
-### Symptoms
-- All login attempts fail with 401/403
-- Auth service health check failing
-- Spike in authentication error logs
-
-### Diagnosis Steps
-1. Check auth service status:
-   ```bash
-   kubectl get pods -n auth-service
-   curl -s https://auth.internal/health | jq .
-   ```
-2. Verify OAuth/OIDC provider reachability:
-   ```bash
-   curl -s https://idp.example.com/.well-known/openid-configuration | jq .status
-   ```
-3. Check token signing key availability:
-   ```bash
-   kubectl get secret jwt-signing-key -n auth-service -o jsonpath='{.data}'
-   ```
-
-### Resolution
-- **If IdP is unreachable:** Check DNS, firewall rules, and IdP status page.
-- **If signing keys rotated unexpectedly:** Restore previous key from backup.
-- **If auth pods are down:** Restart or scale:
-  ```bash
-  kubectl rollout restart deployment/auth-api -n auth-service
-  ```
-
-### Post-Incident
-- Verify all users can authenticate
-- Audit any unauthorized access during outage window
-- Review key rotation procedures
-
----
-
-## 3. Data Feed Stale / No Updates
-
-**Severity:** P2 — High  
-**Impact:** Dashboard displays outdated security metrics; real-time threat visibility lost.  
-**SLA:** Acknowledge within 15 minutes, resolve within 1 hour.
-
-### Symptoms
-- Dashboard "Last Updated" timestamp is stale (>5 minutes old)
-- No new data points on threat timeline charts
-- Data ingestion pipeline metrics show zero throughput
-
-### Diagnosis Steps
-1. Check data pipeline status:
-   ```bash
-   kubectl get pods -n data-pipeline
-   kubectl logs -n data-pipeline deployment/metric-ingester --tail=100
-   ```
-2. Verify message queue health:
-   ```bash
-   aws sqs get-queue-attributes --queue-url <QUEUE_URL> \
-     --attribute-names ApproximateNumberOfMessages
-   ```
-3. Check upstream data sources:
-   ```bash
-   curl -s http://ml-model-monitor.internal/health | jq .
-   curl -s http://threat-detector.internal/health | jq .
-   ```
-
-### Resolution
-- **If message queue is backed up:** Scale consumers:
-  ```bash
-  kubectl scale deployment/metric-ingester -n data-pipeline --replicas=5
-  ```
-- **If upstream source is down:** Alert upstream team, enable degraded mode.
-- **If database write failure:** Check disk space and connection limits.
-
-### Post-Incident
-- Verify data backfill completed
-- Check for data gaps in time series
-
----
-
-## 4. High Latency on Dashboard Load
-
-**Severity:** P2 — High  
-**Impact:** Dashboard takes >5s to load; user experience severely degraded.  
-**SLA:** Acknowledge within 15 minutes, resolve within 1 hour.
-
-### Symptoms
-- Page load time >5 seconds (normally <1.5s)
-- API response times elevated (p99 > 3s)
-- Users reporting slow or unresponsive dashboard
-
-### Diagnosis Steps
-1. Check API response times:
-   ```bash
-   kubectl top pods -n mlsec-dashboards
-   curl -w "%{time_total}" -o /dev/null -s https://dashboard.example.com/api/v1/dashboard/summary
-   ```
-2. Identify slow queries:
-   ```sql
-   SELECT query, mean_exec_time, calls FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10;
-   ```
-3. Check cache hit rates:
-   ```bash
-   redis-cli INFO stats | grep hit
-   ```
-
-### Resolution
-- **If cache is cold/down:** Restart Redis, warm cache.
-- **If slow queries:** Add missing indexes or optimize query.
-- **If resource exhaustion:** Scale horizontally:
-  ```bash
-  kubectl scale deployment/dashboard-api -n mlsec-dashboards --replicas=5
-  ```
-
----
-
-## 5. WebSocket Disconnections
-
-**Severity:** P3 — Medium  
-**Impact:** Real-time updates stop; users must manually refresh.  
-**SLA:** Acknowledge within 30 minutes, resolve within 2 hours.
-
-### Symptoms
-- Clients reporting "disconnected" status indicators
-- WebSocket connection error logs spiking
-- No real-time threat notifications delivered
-
-### Diagnosis Steps
-1. Check WebSocket server pods:
-   ```bash
-   kubectl get pods -n mlsec-dashboards -l component=websocket
-   kubectl logs -n mlsec-dashboards -l component=websocket --tail=50
-   ```
-2. Verify load balancer WebSocket support and idle timeout.
-3. Check connection limits: `cat /proc/sys/net/core/somaxconn`
-
-### Resolution
-- **If idle timeout:** Increase ALB idle timeout to 300s, add ping/pong keepalive.
-- **If connection limit reached:** Scale WebSocket pods.
-- **If pod restarts:** Check memory limits, enable graceful shutdown.
-
----
-
-## 6. Static Assets Not Loading
-
-**Severity:** P3 — Medium  
-**Impact:** Dashboard renders without styles/scripts; partially functional.  
-**SLA:** Acknowledge within 30 minutes, resolve within 2 hours.
-
-### Symptoms
-- Broken layout, missing CSS/JS
-- Browser console shows 404 for static assets
-- CDN returning stale or missing content
-
-### Resolution
-- **If assets missing from S3:** Re-run build and upload:
-  ```bash
-  npm run build
-  aws s3 sync dist/static/ s3://mlsec-dashboard-static/static/ --delete
-  ```
-- **If CDN caching stale version:** Create invalidation:
-  ```bash
-  aws cloudfront create-invalidation --distribution-id <DIST_ID> --paths "/static/*"
-  ```
-
----
-
-## 7. CORS Errors in Production
-
-**Severity:** P3 — Medium  
-**Impact:** Cross-origin API calls fail; embedded dashboards broken.  
-**SLA:** Acknowledge within 30 minutes, resolve within 2 hours.
-
-### Symptoms
-- Browser console shows CORS policy errors
-- API calls from allowed origins being blocked
-
-### Resolution
-- **If origin not in allowlist:** Add origin to `CORS_ALLOWED_ORIGINS` env var and redeploy.
-- **If OPTIONS not handled:** Ensure Flask-CORS or middleware is processing preflight.
-- **If ALB stripping headers:** Configure ALB to forward CORS headers.
-
----
-
-## 8. Memory/CPU Spike on Dashboard Service
-
-**Severity:** P2 — High  
-**Impact:** Service degradation, potential OOM kills.  
-**SLA:** Acknowledge within 15 minutes, resolve within 1 hour.
-
-### Symptoms
-- Pod restarts due to OOMKilled
-- CPU throttling visible in metrics
-- Response times increasing progressively
-
-### Resolution
-- **If OOMKilled:** Increase memory limits temporarily:
-  ```bash
-  kubectl set resources deployment/dashboard-api -n mlsec-dashboards --limits=memory=2Gi
-  ```
-- **If memory leak:** Identify leaking code path, deploy fix, restart pods.
-- **If sudden traffic spike:** Enable HPA:
-  ```bash
-  kubectl autoscale deployment/dashboard-api -n mlsec-dashboards --min=3 --max=10 --cpu-percent=70
-  ```
-
----
-
-## 9. Database Connection Pool Exhaustion
-
-**Severity:** P1 — Critical  
-**Impact:** All API calls fail; dashboard completely non-functional.  
-**SLA:** Acknowledge within 5 minutes, resolve within 30 minutes.
-
-### Symptoms
-- "Connection pool exhausted" errors in logs
-- API returning 500 with database errors
-
-### Diagnosis
-```sql
-SELECT count(*) FROM pg_stat_activity WHERE datname = 'mlsec_dashboard';
-SELECT state, count(*) FROM pg_stat_activity GROUP BY state;
+### Start / stop
+```bash
+export DASHBOARD_API_KEY=your-secret-key
+uvicorn dashboard_server:app --host 127.0.0.1 --port 8080
+# or: python dashboard_server.py
+# Stop with Ctrl+C.
 ```
 
-### Resolution
-- Terminate idle connections:
-  ```sql
-  SELECT pg_terminate_backend(pid) FROM pg_stat_activity
-  WHERE state = 'idle' AND query_start < now() - interval '10 minutes';
-  ```
-- Increase `SQLALCHEMY_POOL_SIZE` and `POOL_MAX_OVERFLOW`.
+---
+
+## Table of Contents
+1. [Server Won't Start](#1-server-wont-start)
+2. [401 Unauthorized on /api Endpoints](#2-401-unauthorized-on-api-endpoints)
+3. [Stale or Empty Metrics](#3-stale-or-empty-metrics)
+4. [Static Asset / Dashboard 404](#4-static-asset--dashboard-404)
+5. [CORS Errors in the Browser](#5-cors-errors-in-the-browser)
 
 ---
 
-## 10. SSL/TLS Certificate Expiry
+## 1. Server Won't Start
 
-**Severity:** P1 — Critical  
-**Impact:** Browser shows security warning; users cannot access dashboard.  
-**SLA:** Acknowledge within 5 minutes, resolve within 30 minutes.
+### Symptoms
+- `uvicorn` exits immediately or errors on launch.
+- Browser cannot connect to `http://localhost:8080`.
+
+### Likely causes and fixes
+
+**Port already in use** (`[Errno 48] Address already in use` / `10048` on Windows):
+```bash
+# Find and stop whatever is holding port 8080
+# Linux/macOS:
+lsof -i :8080
+# Windows (PowerShell):
+Get-NetTCPConnection -LocalPort 8080
+
+# Then re-run on a free port if needed:
+uvicorn dashboard_server:app --host 127.0.0.1 --port 8090
+```
+
+**`DASHBOARD_API_KEY` not set:** the server still starts, but every `/api/*` call returns
+HTTP 500 (`Server misconfigured: DASHBOARD_API_KEY environment variable not set.`). On
+startup with no key set, it prints a `WARNING: DASHBOARD_API_KEY not set` banner. Fix:
+```bash
+export DASHBOARD_API_KEY=your-secret-key        # Windows: $env:DASHBOARD_API_KEY="..."
+uvicorn dashboard_server:app --host 127.0.0.1 --port 8080
+```
+
+**Missing dependencies** (`ModuleNotFoundError: fastapi` / `uvicorn`):
+```bash
+pip install fastapi uvicorn
+```
+
+### Verify
+```bash
+curl -s http://localhost:8080/health
+# Expected: {"status": "ok", "service": "mlsec-dashboard-hub", "version": "3.0.0"}
+```
+
+---
+
+## 2. 401 Unauthorized on /api Endpoints
+
+### Symptoms
+- `GET /api/status` or `GET /api/metrics` returns `401 Invalid or missing API key.`
+
+### Cause
+The `X-API-Key` request header is missing or does not match the server's
+`DASHBOARD_API_KEY` (compared with `hmac.compare_digest`).
+
+### Fix
+Send the correct key:
+```bash
+curl -s http://localhost:8080/api/status -H "X-API-Key: your-secret-key"
+```
+- Confirm the value matches the `DASHBOARD_API_KEY` the server was started with.
+- If you get HTTP 500 instead of 401, `DASHBOARD_API_KEY` was never set — see
+  [Server Won't Start](#1-server-wont-start).
+- Note `/health` and `/` require no key; only `/api/*` do.
+
+---
+
+## 3. Stale or Empty Metrics
+
+### Symptoms
+- `/api/metrics` returns few or no repos, or numbers look out of date.
+- `total_repos_with_evidence` is 0 or lower than expected.
+
+### Cause
+Metrics are read live from JSON files in **sibling repositories** located in the parent
+directory of this repo (`../<repo-name>/`). The server scans `evidence/`, `results/`,
+`metrics/`, `reports/`, `output/`, and root-level `*.json` files. If a sibling repo is
+missing, or its evidence JSON has not been regenerated, results are empty or stale.
 
 ### Diagnosis
 ```bash
-echo | openssl s_client -connect dashboard.example.com:443 2>/dev/null | openssl x509 -noout -dates
-kubectl get certificates -n mlsec-dashboards
+# See which sibling repos the server can find and how many evidence files each has
+curl -s http://localhost:8080/api/status -H "X-API-Key: your-secret-key"
 ```
 
-### Resolution
-- If cert-manager failed: check issuer, fix DNS/HTTP challenge, trigger renewal.
-- Emergency: upload manual certificate while fixing automation.
+### Fix
+- Ensure the expected sibling repos are checked out next to this one (same parent dir).
+- Regenerate the evidence/metrics JSON in the relevant sibling repo (run its own
+  tests/benchmark that produce the JSON files).
+- Confirm the JSON is valid — malformed files are skipped silently. Files over 10 MB are
+  ignored by design.
+- Re-request `/api/metrics`; the data is read fresh on each request (no caching), so no
+  restart is required.
 
 ---
 
-## Escalation Matrix
+## 4. Static Asset / Dashboard 404
 
-| Severity | Acknowledge | Resolve | Escalate To |
-|----------|-------------|---------|-------------|
-| P1 | 5 min | 30 min | VP Eng + Security Lead |
-| P2 | 15 min | 1 hour | Team Lead |
-| P3 | 30 min | 2 hours | On-call engineer |
-| P4 | 4 hours | Next business day | Backlog |
+### Symptoms
+- `GET /` shows "No index.html found."
+- A per-repo dashboard path like `/mcp-agent-security-gateway/` returns 404.
+
+### Cause
+- `index.html` is missing from the repo root (the server falls back to a placeholder page).
+- A sibling-repo dashboard directory does not exist locally. Static mounts are only added
+  for directories that exist under this repo's folder at startup.
+
+### Fix
+- Confirm `index.html` exists in the repo root next to `dashboard_server.py`.
+- Confirm the target dashboard directory exists locally; if you add it after the server is
+  already running, **restart the server** so the new static mount is registered.
+
+---
+
+## 5. CORS Errors in the Browser
+
+### Symptoms
+- Browser console shows a CORS policy error when a page calls the API.
+
+### Cause
+CORS is intentionally restricted to `http://localhost:8080`, `http://127.0.0.1:8080`,
+`http://localhost:3000`, and `http://127.0.0.1:3000`, and only allows the `GET` method
+and `Authorization` / `X-API-Key` headers. Requests from any other origin are blocked.
+
+### Fix
+- Load the dashboard from one of the allowed localhost origins (this is a local dev tool,
+  not a public service).
+- If you genuinely need another local origin, add it to the `allow_origins` list in
+  `dashboard_server.py` and restart the server.
+
+---
+
+## Notes
+
+- This is a local development/inspection tool. There is no production deployment, no
+  autoscaling, no TLS termination, and no external datastore to manage. "Incident
+  response" here means restarting the local process and fixing local configuration or
+  sibling-repo evidence files.
