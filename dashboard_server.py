@@ -351,7 +351,7 @@ if __name__ == "__main__":
         print("\n  WARNING: DASHBOARD_API_KEY not set. API endpoints will return 500.")
         print("  Set it:  export DASHBOARD_API_KEY=your-secret-key\n")
 
-    print("\n  ML Security Dashboard Hub → http://localhost:8080")
+    print("\n  ML Security Dashboard Hub -> http://localhost:8080")
     print("  Serving static dashboards + metrics API\n")
     uvicorn.run(
         "dashboard_server:app",
