@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-
 # Set API key before importing the app
 os.environ["DASHBOARD_API_KEY"] = "test-api-key-for-unit-tests"
 
@@ -15,6 +14,7 @@ os.environ["DASHBOARD_API_KEY"] = "test-api-key-for-unit-tests"
 def client():
     """Create a test client with the app."""
     from dashboard_server import app
+
     return TestClient(app)
 
 
@@ -78,12 +78,11 @@ class TestAuthentication:
         with patch.dict(os.environ, {"DASHBOARD_API_KEY": ""}):
             # Need to reload the module to pick up the new env var
             import dashboard_server
+
             original_key = dashboard_server.API_KEY
             dashboard_server.API_KEY = ""
             try:
-                response = client.get(
-                    "/api/status", headers={"X-API-Key": "anything"}
-                )
+                response = client.get("/api/status", headers={"X-API-Key": "anything"})
                 assert response.status_code == 500
                 assert "misconfigured" in response.json()["detail"].lower()
             finally:
@@ -108,7 +107,7 @@ class TestApiStatus:
         response = client.get("/api/status", headers=api_headers)
         data = response.json()
         # Each repo entry should have an 'exists' field
-        for repo_name, repo_status in data["repos"].items():
+        for repo_status in data["repos"].values():
             assert "exists" in repo_status
             assert "evidence_file_count" in repo_status
             assert isinstance(repo_status["exists"], bool)

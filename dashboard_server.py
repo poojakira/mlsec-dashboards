@@ -142,14 +142,24 @@ def _extract_metrics(data: Any) -> dict[str, Any]:
 
     # Common metric keys we look for
     metric_keys = [
-        "fp_rate", "false_positive_rate",
-        "detection_rate", "recall", "precision",
-        "f1", "f1_score",
-        "auc", "auc_roc",
+        "fp_rate",
+        "false_positive_rate",
+        "detection_rate",
+        "recall",
+        "precision",
+        "f1",
+        "f1_score",
+        "auc",
+        "auc_roc",
         "accuracy",
-        "test_count", "tests_passed", "tests_failed", "total_tests",
-        "rules_count", "findings_count",
-        "model_count", "scan_count",
+        "test_count",
+        "tests_passed",
+        "tests_failed",
+        "total_tests",
+        "rules_count",
+        "findings_count",
+        "model_count",
+        "scan_count",
     ]
 
     for key in metric_keys:
@@ -188,7 +198,9 @@ async def serve_index():
     index_path = BASE_DIR / "index.html"
     if index_path.is_file():
         return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
-    return HTMLResponse(content="<h1>ML Security Dashboard Hub</h1><p>No index.html found.</p>")
+    return HTMLResponse(
+        content="<h1>ML Security Dashboard Hub</h1><p>No index.html found.</p>"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -212,7 +224,9 @@ async def api_status(_: str = Depends(verify_api_key)):
         status[repo_name] = {
             "exists": repo_exists,
             "evidence_file_count": len(evidence_files),
-            "evidence_files": [str(f.relative_to(REPOS_DIR)) for f in evidence_files[:20]],
+            "evidence_files": [
+                str(f.relative_to(REPOS_DIR)) for f in evidence_files[:20]
+            ],
         }
 
     return {
