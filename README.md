@@ -1,6 +1,6 @@
 # mlsec-dashboards
 
-FastAPI server that aggregates JSON evidence files from 12+ ML security repos into browsable dashboards with authenticated API endpoints.
+FastAPI server that aggregates JSON evidence files from 8 active ML security repos into browsable dashboards with authenticated API endpoints.
 
 ---
 
@@ -42,7 +42,7 @@ The dashboards show actual numbers from real test runs. Weak results are shown a
      +--------v------+  +--------v------+  +----------v--------+
      | Static HTML   |  | /api/metrics  |  | /api/status       |
      | Dashboards    |  | (aggregated)  |  | (repo discovery)  |
-     | (12 repos +   |  +--------+------+  +----------+--------+
+     | (8 repos +    |  +--------+------+  +----------+--------+
      |  index.html)  |           |                    |
      +--------+------+           |                    |
               |            +-----v--------------------v-----+
@@ -62,7 +62,7 @@ The dashboards show actual numbers from real test runs. Weak results are shown a
 | Component | Responsibility |
 |-----------|---------------|
 | `dashboard_server.py` | FastAPI app: auth, CORS, evidence file discovery, metrics aggregation, static file serving |
-| `index.html` | Main portfolio overview page with cards for all 13 repos, category filters, honesty notes |
+| `index.html` | Main portfolio overview page with cards for the active repos, category filters, honesty notes |
 | `shared/design-system.css` | Unified dark-theme design system (CSS custom properties, grid layouts, stat cards, tables) |
 | `shared/dashboard.js` | Client-side utilities: animated counters, sortable/filterable tables, tab switching, live scan demo |
 | `<repo-name>/index.html` | Per-project dashboard pages with embedded benchmark data |
@@ -230,7 +230,7 @@ Each per-project dashboard reports metrics from that project's actual test suite
 - **Evidence schema validation**: Validate incoming JSON against a defined schema rather than permissive key scanning.
 - **Dashboard generation from evidence**: Auto-generate per-repo HTML pages from evidence files instead of hand-crafting each one.
 - **HTTPS support**: Built-in TLS termination or reverse proxy configuration.
-- **Expand beyond 12 repos**: Make the dashboard list configurable rather than hardcoded.
+- **Expand beyond the current 8 active repos**: Make the dashboard list configurable rather than hardcoded.
 
 ---
 

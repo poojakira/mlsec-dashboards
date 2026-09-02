@@ -326,7 +326,6 @@ _dashboard_dirs = [
     "ml-security-command-center",
     "mlsec-benchmark-suite",
     "unified-ml-security-platform",
-    "attack-detection-engine",
     "shared",
 ]
 
