@@ -6,9 +6,11 @@ __pycache__/
 # Virtual environments
 .venv/
 venv/
+.venv-audit/
 
 # Testing
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
