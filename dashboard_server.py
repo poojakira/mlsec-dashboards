@@ -194,10 +194,23 @@ async def health():
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
-    """Serve the main dashboard index.html."""
+    """Serve the main dashboard index.html.
+
+    Reads are guarded: a missing, unreadable, or non-UTF-8 index.html returns a
+    clean fallback page rather than surfacing an unhandled 500 with a traceback.
+    """
     index_path = BASE_DIR / "index.html"
     if index_path.is_file():
-        return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+        try:
+            return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError):
+            return HTMLResponse(
+                content=(
+                    "<h1>ML Security Dashboard Hub</h1>"
+                    "<p>index.html could not be read.</p>"
+                ),
+                status_code=500,
+            )
     return HTMLResponse(
         content="<h1>ML Security Dashboard Hub</h1><p>No index.html found.</p>"
     )
