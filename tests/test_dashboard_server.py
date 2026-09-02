@@ -206,3 +206,54 @@ class TestSafeReadJson:
         f = tmp_path / "nonexistent.json"
         result = _safe_read_json(f)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Robustness / hardening
+# ---------------------------------------------------------------------------
+
+
+class TestServeIndexRobustness:
+    def test_missing_index_returns_fallback(self, client):
+        """If index.html is absent, serve a fallback page, not a 500 traceback."""
+        with patch("dashboard_server.Path.is_file", return_value=False):
+            response = client.get("/")
+        assert response.status_code == 200
+        assert "No index.html found" in response.text
+
+    def test_unreadable_index_returns_clean_500(self, client):
+        """A read/decode error on index.html returns a clean 500, not a traceback."""
+        import dashboard_server
+
+        with (
+            patch.object(dashboard_server.Path, "is_file", return_value=True),
+            patch.object(
+                dashboard_server.Path,
+                "read_text",
+                side_effect=OSError("simulated read failure"),
+            ),
+        ):
+            response = client.get("/")
+        assert response.status_code == 500
+        assert "could not be read" in response.text
+
+
+class TestEvidenceSizeCap:
+    def test_oversized_evidence_file_is_skipped(self, tmp_path, monkeypatch):
+        """Evidence JSON files at/over the 10MB cap are excluded from discovery."""
+        import dashboard_server
+
+        repo = tmp_path / "some-repo"
+        (repo / "results").mkdir(parents=True)
+        small = repo / "results" / "small.json"
+        small.write_text('{"detection_rate": 0.9}', encoding="utf-8")
+        big = repo / "results" / "big.json"
+        # Write a valid-ish JSON larger than the 10MB cap.
+        big.write_text("[" + ",".join(["0"] * 6_000_000) + "]", encoding="utf-8")
+        assert big.stat().st_size >= 10_000_000
+
+        monkeypatch.setattr(dashboard_server, "REPOS_DIR", tmp_path)
+        found = dashboard_server._find_evidence_files("some-repo")
+        names = {p.name for p in found}
+        assert "small.json" in names
+        assert "big.json" not in names

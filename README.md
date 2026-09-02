@@ -208,13 +208,13 @@ Each per-project dashboard reports metrics from that project's actual test suite
 | Criterion | Status | Notes |
 |-----------|--------|-------|
 | Authentication | Done | API key with constant-time compare |
-| Error handling | Partial | JSON parse failures return None gracefully; missing repos are reported |
+| Error handling | Done | JSON parse failures return None gracefully; missing repos reported; index.html read/decode errors return a clean fallback (no traceback); evidence files >10 MB skipped |
 | Logging | Minimal | Uvicorn access logs only |
 | Rate limiting | Not implemented | Acceptable for localhost use |
 | HTTPS | Not included | Intended for local development |
 | Monitoring/alerting | None | No health check integrations |
 | CI/CD | Present | GitHub Actions directory exists |
-| Test coverage | Good | Auth, health, metrics extraction, JSON parsing all tested |
+| Test coverage | Good | 25 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
 **Verdict:** Production-ready for its intended purpose (local developer tool, portfolio demos). Not suitable for deployment as a public-facing service without adding HTTPS, rate limiting, structured logging, and proper secret management.
