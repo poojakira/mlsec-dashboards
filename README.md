@@ -182,7 +182,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 
 | Project | Metric | Value | Context |
 |---------|--------|-------|---------|
-| MCP Security Gateway | Detection rate | 51% | 37 bundled attack scenarios |
+| MCP Security Gateway | Bundled self-test | 37/37 blocked (100%) | Fixed known-payload regression catalog; not a real-world detection rate |
 | HF Provenance Scanner | Block rate | 100% (33/33) | Internal fixture suite |
 | LLM Redteam Framework | F1 | 0.97 grouped | 0.8302 on novel-phrasing OOD benchmark |
 | Adversarial ML Lab | Clean accuracy | 71.82% | Real SmallCNN benchmark; PGD-20 robust accuracy 0.00% at ε=8/255 |
@@ -256,4 +256,4 @@ Each per-project dashboard reports metrics from that project's committed test su
 
 ## Engineering Lessons
 
-The most useful thing this project demonstrates is that honesty scales better than polish. Showing a detection rate of 51% with clear gap analysis earns more trust than claiming 99% with no methodology. The same principle applies to the architecture: a flat file server with no database is the right tool when the requirement is "show benchmark results to humans." Over-engineering this into a React SPA with a Postgres backend would add deployment complexity without improving the core value: making evidence browsable.
+The most useful thing this project demonstrates is that honesty scales better than polish. Showing a scoped 37/37 bundled self-test result with its limitations earns more trust than presenting it as a real-world detection rate. The same principle applies to the architecture: a flat file server with no database is the right tool when the requirement is "show benchmark results to humans." Over-engineering this into a React SPA with a Postgres backend would add deployment complexity without improving the core value: making evidence browsable.
