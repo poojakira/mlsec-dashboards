@@ -31,8 +31,8 @@
   </div>
 
   <div class="ds-honesty">
-    <strong>Benchmark data from <code>src/adv_lab/eval/</code>.</strong>
-    PGD ε=8/255 drops CIFAR-10 accuracy from 72% → 23%. Run a live eval below if adversarial-ml-lab is installed.
+    <strong>Measured benchmark data from <code>results/cifar10_smallcnn_real.json</code>.</strong>
+    On the committed CPU SmallCNN run, clean CIFAR-10 accuracy is 71.82%; PGD-20 at ε=8/255 reduces robust accuracy to 0.00%. This is a measured small-model benchmark, not the synthetic ResNet-18 projection.
   </div>
 
   <!-- Live run panel -->
@@ -88,10 +88,10 @@
     <div class="ds-panel">
       <div class="ds-panel-title">Attack vs defense summary</div>
       <div class="ds-bar-group">
-        <div class="ds-bar-row"><span class="ds-bar-label">Clean (baseline)</span><div class="ds-bar-track"><div class="ds-bar-fill green" data-width="72%">72%</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">FGSM ε=4/255</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="38%">38%</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">PGD ε=8/255</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="23%">23%</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">C&amp;W L2</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="31%">31%</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Clean (baseline)</span><div class="ds-bar-track"><div class="ds-bar-fill green" data-width="71.82%">71.82%</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">FGSM ε=8/255</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="3.32%">3.32%</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">PGD-20 ε=8/255</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="0%">0.00%</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">C&amp;W L2</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="4.20%">4.20%</div></div></div>
         <div class="ds-bar-row"><span class="ds-bar-label">RS certified ε=0.5</span><div class="ds-bar-track"><div class="ds-bar-fill teal" data-width="37%">37%</div></div></div>
       </div>
     </div>
