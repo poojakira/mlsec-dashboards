@@ -96,8 +96,7 @@
     <div class="ds-honesty">
     <strong>Live data when mcp-gateway is running.</strong>
     Stats update every 2 seconds from <code>localhost:8080/v1/metrics</code> via dashboard_server.
-    When the gateway is offline, all stat cards show <code>—</code>. Detection rate of 51% is from the
-    offline red-team benchmark (37 attacks); live metrics show actual production request counts.
+    When the gateway is offline, all stat cards show <code>—</code>. The committed offline red-team self-test currently blocks 37/37 fixed catalog attacks (100%); this is a regression signal against known payloads, not a real-world detection rate. Live metrics show actual request counts.
   </div>
 <!-- Connection status bar -->
   <div class="conn-bar" id="conn-bar">
