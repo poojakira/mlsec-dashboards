@@ -32,12 +32,12 @@
 
   <div class="ds-honesty">
     <strong>Static benchmark data from <code>src/privacy_attacks/eval/</code>.</strong>
-    Membership inference AUC 0.87 on CIFAR-10 ResNet18 — a well-studied, overfit-prone model. Results may not generalise to production models trained with stronger regularisation or DP-SGD. Model extraction and inversion attacks are implemented but not yet benchmarked at scale.
+    Committed Adult/OpenML DirectMIA benchmark: mean ROC AUC 0.557 across 5 seeds, with a 95% across-seed CI of 0.5525–0.5615. A separate breast-cancer benchmark reports AUC 0.4541. Results are dataset/model specific and must not be generalized.
   </div>
 
   <div class="ds-stats">
     <div class="ds-stat red">
-      <div class="stat-value">0.87</div>
+      <div class="stat-value">0.557</g/div>
       <div class="stat-label">MI attack AUC</div>
       <div class="stat-sub">CIFAR-10 ResNet18</div>
     </div>
@@ -66,7 +66,7 @@
     <div class="ds-panel">
       <div class="ds-panel-title">Privacy risk summary</div>
       <div class="ds-bar-group" id="priv-bars">
-        <div class="ds-bar-row"><span class="ds-bar-label">MI AUC (no defence)</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="87%">0.87</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">MI AUC (no defence)</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="87%">0.557</g/div></div></div>
         <div class="ds-bar-row"><span class="ds-bar-label">MI AUC (DP-SGD ε=2)</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="62%">0.62</div></div></div>
         <div class="ds-bar-row"><span class="ds-bar-label">Extraction fidelity</span><div class="ds-bar-track"><div class="ds-bar-fill violet" data-width="70%">~70%</div></div></div>
         <div class="ds-bar-row"><span class="ds-bar-label">Random baseline</span><div class="ds-bar-track"><div class="ds-bar-fill" style="background:var(--dim)" data-width="50%">0.50</div></div></div>
