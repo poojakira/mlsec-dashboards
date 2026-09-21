@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Model Privacy Attacks — Evidence Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <nav class="ds-nav">
@@ -24,53 +23,53 @@
     <div class="ds-meta">
       <span>Membership inference · model extraction · privacy risk evaluation</span>
       <span>·</span>
-      <span>CIFAR-10 · ResNet18</span>
+      <span>Adult/OpenML · breast_cancer</span>
       <span>·</span>
       <a href="https://github.com/poojakira/model-privacy-attacks" target="_blank">Source repo ↗</a>
     </div>
   </div>
 
   <div class="ds-honesty">
-    <strong>Static benchmark data from <code>src/privacy_attacks/eval/</code>.</strong>
+    <strong>Static benchmark data from committed <code>results/*.json</code> artifacts.</strong>
     Committed Adult/OpenML DirectMIA benchmark: mean ROC AUC 0.557 across 5 seeds, with a 95% across-seed CI of 0.5525–0.5615. A separate breast-cancer benchmark reports AUC 0.4541. Results are dataset/model specific and must not be generalized.
   </div>
 
   <div class="ds-stats">
     <div class="ds-stat red">
-      <div class="stat-value">0.557</g/div>
-      <div class="stat-label">MI attack AUC</div>
-      <div class="stat-sub">CIFAR-10 ResNet18</div>
+      <div class="stat-value">0.557</div>
+      <div class="stat-label">Adult MI mean AUC</div>
+      <div class="stat-sub">5 independent seeds</div>
     </div>
     <div class="ds-stat amber">
-      <div class="stat-value">0.62</div>
-      <div class="stat-label">MI AUC w/ DP-SGD</div>
-      <div class="stat-sub">ε=2.0 noise multiplier</div>
+      <div class="stat-value">0.5525–0.5615</div>
+      <div class="stat-label">Across-seed 95% CI</div>
+      <div class="stat-sub">Student t-interval</div>
     </div>
     <div class="ds-stat violet">
-      <div class="stat-value">~70%</div>
-      <div class="stat-label">Model extraction</div>
-      <div class="stat-sub">Fidelity vs original</div>
+      <div class="stat-value">0.4541</div>
+      <div class="stat-label">Breast-cancer MIA AUC</div>
+      <div class="stat-sub">Separate real benchmark</div>
     </div>
     <div class="ds-stat blue">
-      <div class="stat-value">3</div>
-      <div class="stat-label">Attack types</div>
-      <div class="stat-sub">MI · extraction · inversion</div>
+      <div class="stat-value">0.1293</div>
+      <div class="stat-label">Adult generalization gap</div>
+      <div class="stat-sub">train 0.9927 · test 0.8634</div>
     </div>
   </div>
 
   <div class="ds-grid-2">
     <div class="ds-panel">
-      <div class="ds-panel-title">MI ROC curve — with / without DP-SGD</div>
-      <canvas id="rocChart" style="max-height:240px"></canvas>
+      <div class="ds-panel-title">Adult/OpenML DirectMIA evidence</div>
+      <div class="ds-bar-group">
+        <div class="ds-bar-row"><span class="ds-bar-label">Mean ROC AUC</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="55.7%">0.557</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Train accuracy</span><div class="ds-bar-track"><div class="ds-bar-fill violet" data-width="99.27%">0.9927</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Test accuracy</span><div class="ds-bar-track"><div class="ds-bar-fill blue" data-width="86.34%">0.8634</div></div></div>
+      </div>
+      <p class="text-muted">Source: <code>results/adult_mia_auc_ci_benchmark.json</code>. Five seeds (42–46), 48,842 samples, GradientBoostingClassifier.</p>
     </div>
     <div class="ds-panel">
-      <div class="ds-panel-title">Privacy risk summary</div>
-      <div class="ds-bar-group" id="priv-bars">
-        <div class="ds-bar-row"><span class="ds-bar-label">MI AUC (no defence)</span><div class="ds-bar-track"><div class="ds-bar-fill red" data-width="87%">0.557</g/div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">MI AUC (DP-SGD ε=2)</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="62%">0.62</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">Extraction fidelity</span><div class="ds-bar-track"><div class="ds-bar-fill violet" data-width="70%">~70%</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">Random baseline</span><div class="ds-bar-track"><div class="ds-bar-fill" style="background:var(--dim)" data-width="50%">0.50</div></div></div>
-      </div>
+      <div class="ds-panel-title">Claim boundary</div>
+      <p>The 0.557 value is a dataset/model-specific membership-inference result, not a universal privacy-risk score. A separate committed breast-cancer benchmark reports MIA AUC 0.4541. DP-SGD, extraction, and inversion capabilities must not be assigned headline effectiveness numbers unless a matching committed benchmark artifact exists.</p>
     </div>
   </div>
 
@@ -82,30 +81,5 @@
 </div>
 
 <script src="../shared/dashboard.js"></script>
-<script>
-// Approximate ROC curves
-const fpr = [0,.05,.1,.2,.3,.4,.5,.6,.7,.8,.9,1];
-const tpr_no_dp = [0,.28,.46,.62,.72,.79,.85,.9,.94,.97,.99,1];
-const tpr_dp    = [0,.12,.22,.38,.50,.59,.67,.74,.80,.87,.93,1];
-new Chart(document.getElementById('rocChart'), {
-  type: 'line',
-  data: {
-    labels: fpr,
-    datasets: [
-      { label: 'No defence (AUC=0.87)', data: tpr_no_dp, borderColor: 'rgba(248,113,113,.9)', backgroundColor: 'rgba(248,113,113,.1)', fill: true, tension: 0.3, pointRadius: 0 },
-      { label: 'DP-SGD ε=2 (AUC=0.62)', data: tpr_dp, borderColor: 'rgba(251,191,36,.9)', backgroundColor: 'rgba(251,191,36,.08)', fill: true, tension: 0.3, pointRadius: 0 },
-      { label: 'Random (AUC=0.50)', data: fpr, borderColor: 'rgba(74,80,104,.5)', borderDash: [4,4], fill: false, pointRadius: 0 }
-    ]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { labels: { color:'#7a8299', font:{ size:11 } } } },
-    scales: {
-      x: { title: { display:true, text:'FPR', color:'#7a8299' }, ticks: { color:'#7a8299' }, grid: { color:'#2a2d3e' } },
-      y: { title: { display:true, text:'TPR', color:'#7a8299' }, ticks: { color:'#7a8299' }, grid: { color:'#2a2d3e' } }
-    }
-  }
-});
-</script>
 </body>
 </html>
