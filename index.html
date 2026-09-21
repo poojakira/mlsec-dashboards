@@ -400,17 +400,17 @@ body { padding-top: 0; }
     <h3>LLM Redteam Framework</h3>
     <p class="fc-desc">
       Offline prompt-injection detector evaluated on two datasets.
-      F1=0.93 on the curated deepset benchmark — drops to 0.70 on out-of-distribution transfer eval.
+      F1=0.97 on grouped held-out templates; novel-phrasing OOD F1=0.8302.
       Gap is documented, not papered over.
     </p>
     <div class="fc-metrics">
       <div class="fc-metric">
-        <div class="val" style="color:var(--green)">0.93</div>
-        <div class="lbl">F1 curated</div>
+        <div class="val" style="color:var(--green)">0.97</div>
+        <div class="lbl">F1 grouped</div>
       </div>
       <div class="fc-metric">
-        <div class="val" style="color:var(--amber)">0.70</div>
-        <div class="lbl">F1 transfer</div>
+        <div class="val" style="color:var(--amber)">0.8302</div>
+        <div class="lbl">F1 novel OOD</div>
       </div>
       <div class="fc-metric">
         <div class="val" style="color:var(--red)">−0.23</div>
@@ -474,10 +474,10 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>Adversarial ML Lab</h4>
       </div>
-      <p>FGSM/PGD/C&W attacks + Randomized Smoothing defense. CIFAR-10: clean 72%, PGD 23%.</p>
+      <p>FGSM/PGD/C&W attacks + Randomized Smoothing defense. CIFAR-10 SmallCNN measured: clean 71.82%, PGD-20 0.00% at ε=8/255.</p>
       <div class="repo-card-footer">
         <span class="repo-type-badge rtype-prototype">Prototype</span>
-        <span class="repo-metric text-muted">72% → 23% (PGD)</span>
+        <span class="repo-metric text-muted">71.82% → 0.00% (PGD-20)</span>
       </div>
     </a>
 
@@ -485,10 +485,10 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>Model Privacy Attacks</h4>
       </div>
-      <p>Membership inference + model extraction. MI AUC 0.87 on CIFAR-10 ResNet18.</p>
+      <p>Membership inference + model extraction. Adult/OpenML DirectMIA mean AUC 0.557 across 5 seeds.</p>
       <div class="repo-card-footer">
         <span class="repo-type-badge rtype-prototype">Prototype</span>
-        <span class="repo-metric text-muted">MI AUC 0.87</span>
+        <span class="repo-metric text-muted">MI AUC 0.557</span>
       </div>
     </a>
 
