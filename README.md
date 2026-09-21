@@ -1,6 +1,6 @@
 # mlsec-dashboards
 
-**Repository owner & maintainer:** Pooja Kiran ([@poojakira](https://github.com/poojakira)) — I review changes, verify public claims, and maintain the repository record.
+**Repository owner & maintainer:** Pooja Kiran ([@poojakira](https://github.com/poojakira)) — I lead the design, implementation, validation, documentation, and maintenance of this repository, and I verify public claims against repository evidence.
 
 FastAPI server that aggregates JSON evidence files from 8 active ML security repos into browsable dashboards with authenticated API endpoints.
 
