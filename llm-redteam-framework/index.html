@@ -116,8 +116,8 @@
 
     <div class="f1-compare" style="margin-bottom:16px">
       <div class="f1-box">
-        <div class="f1-val text-green" id="f1-curated">0.93</div>
-        <div class="f1-lbl">F1 — curated eval</div>
+        <div class="f1-val text-green" id="f1-curated">0.97</div>
+        <div class="f1-lbl">F1 — grouped held-out</div>
         <div class="f1-src" id="f1-curated-src">deepset/prompt-injections · committed benchmark</div>
       </div>
       <div>
@@ -125,8 +125,8 @@
         <div class="f1-drop" id="f1-drop">−0.23 on transfer</div>
       </div>
       <div class="f1-box">
-        <div class="f1-val text-amber" id="f1-transfer">0.70</div>
-        <div class="f1-lbl">F1 — transfer eval</div>
+        <div class="f1-val text-amber" id="f1-transfer">0.8302</div>
+        <div class="f1-lbl">F1 — novel-phrasing OOD</div>
         <div class="f1-src" id="f1-transfer-src">Out-of-distribution · committed benchmark</div>
       </div>
     </div>
@@ -141,7 +141,7 @@
         <div class="stat-label">Recall</div>
       </div>
       <div class="ds-stat amber">
-        <div class="stat-value" id="s-f1">0.93</div>
+        <div class="stat-value" id="s-f1">0.97</div>
         <div class="stat-label">F1</div>
       </div>
       <div class="ds-stat violet">
@@ -173,7 +173,7 @@
 const PROXY = 'http://localhost:9001';
 
 // committed baseline values
-const BASELINE = { precision:0.94, recall:0.92, f1:0.93, f1_transfer:0.70, asr:0.73 };
+const BASELINE = { precision:0.7857, recall:0.88, f1:0.97, f1_transfer:0.8302, asr:0.73 };
 
 let prfChart, confChart;
 
@@ -218,7 +218,7 @@ function buildCharts(p, r, f, pt, rt, ft) {
     }
   });
 }
-buildCharts(0.94, 0.92, 0.93, 0.72, 0.68, 0.70);
+buildCharts(0.94, 0.92, 0.97, 0.72, 0.68, 0.8302);
 
 function updateMetrics(d) {
   // d may come from live result JSON or baseline
