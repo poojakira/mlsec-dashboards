@@ -8,7 +8,7 @@ FastAPI server that aggregates JSON evidence files from 8 active ML security rep
 
 Each of my ML security tools produces JSON output from benchmarks and test runs. This server collects those files from sibling repo directories, renders per-project HTML dashboards, and exposes REST endpoints for programmatic access.
 
-The dashboards show actual numbers from committed evidence files. Weak results are shown alongside strong ones (e.g., ROC-AUC 0.54 on one attack type, F1 dropping from 0.93 to 0.70 on OOD data). The point is to have one URL where I can show someone what the tools report, with honest numbers and stated limitations.
+The dashboards show actual numbers from committed evidence files. Weak results are shown alongside strong ones (e.g., ROC-AUC 0.54 on one attack type, F1 0.97 on grouped held-out templates and 0.8302 on novel-phrasing OOD data). The point is to have one URL where I can show someone what the tools report, with honest numbers and stated limitations.
 
 ---
 
@@ -90,7 +90,7 @@ The dashboards embed benchmark numbers directly in HTML. This means they work wi
 Evidence lives as flat JSON files in sibling repos. The server reads them on demand. This avoids deployment complexity and keeps the source of truth in the repos that generate the data. The trade-off: every `/api/metrics` call scans the filesystem.
 
 **Honest reporting over marketing.**
-The index page explicitly states: "These are interactive evidence dashboards, not live security monitoring. Most data is static benchmark output embedded in HTML." Weak results (dataset-poisoning-detector at ROC-AUC 0.54, LLM redteam F1 dropping from 0.93 to 0.70 on transfer data) are shown as-is with explanations.
+The index page explicitly states: "These are interactive evidence dashboards, not live security monitoring. Most data is static benchmark output embedded in HTML." Weak results (dataset-poisoning-detector at ROC-AUC 0.54, LLM redteam F1 0.97 grouped vs 0.8302 novel-phrasing OOD) are shown as-is with explanations.
 
 **Shared design system without build tools.**
 One CSS file and one JS file, included via `<link>` and `<script>`. No bundler, no npm, no build step. This keeps the repo simple and makes individual dashboards self-contained. The trade-off: no tree-shaking, no TypeScript, no component framework.
@@ -184,11 +184,11 @@ Each per-project dashboard reports metrics from that project's committed test su
 |---------|--------|-------|---------|
 | MCP Security Gateway | Detection rate | 51% | 37 bundled attack scenarios |
 | HF Provenance Scanner | Block rate | 100% (33/33) | Internal fixture suite |
-| LLM Redteam Framework | F1 (curated) | 0.93 | Drops to 0.70 on transfer data |
-| Adversarial ML Lab | Clean accuracy | 72% | Drops to 23% under PGD attack |
-| Model Privacy Attacks | MI AUC | 0.87 | CIFAR-10 ResNet18 |
+| LLM Redteam Framework | F1 | 0.97 grouped | 0.8302 on novel-phrasing OOD benchmark |
+| Adversarial ML Lab | Clean accuracy | 71.82% | Real SmallCNN benchmark; PGD-20 robust accuracy 0.00% at ε=8/255 |
+| Model Privacy Attacks | MI AUC | 0.557 mean | Adult/OpenML, 5 seeds; 95% CI 0.5525–0.5615 |
 | Dataset Poisoning Detector | ROC-AUC | ~0.54 | Near-baseline; target is 0.75 |
-| ATT&CK v19 Core | Tests passing | 18/18 | Data library, not detection tool |
+| ATT&CK v19 Core | v19 structure tests | 18/18 | Specific structure suite; not the repository's total test count |
 
 **Limitations:**
 - Most dashboard data is static benchmark output embedded in HTML, not live monitoring.
