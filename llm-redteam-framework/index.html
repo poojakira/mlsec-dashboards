@@ -251,7 +251,7 @@ async function checkServer() {
       document.getElementById('run-btn').disabled = false;
     } else if (d.proxy === 'ok') {
       document.getElementById('nav-badge').textContent = 'redteam-eval missing';
-      document.getElementById('nav-badge').className = 'ds-nav-badge prototype';
+      document.getElementById('nav-badge').className = 'ds-nav-badge operational';
     }
   } catch {
     document.getElementById('nav-badge').textContent = 'Offline';
