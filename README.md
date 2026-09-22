@@ -171,7 +171,7 @@ pytest tests/ -v
 - **File size limits**: Evidence files larger than 10 MB are skipped to prevent memory exhaustion.
 - **CORS lockdown**: Only `localhost:8080` and `localhost:3000` origins are allowed. GET method only.
 - **No secrets in the repo**: API keys come from environment variables.
-- **Intended scope**: This is an internal development tool, not a production-facing service. It should not be exposed to the public internet.
+- **Intended scope**: This is an authenticated internal production service. Public exposure requires an external identity-aware gateway/TLS layer and environment-specific rate limiting; direct unauthenticated internet exposure is unsupported.
 
 ---
 
