@@ -32,21 +32,29 @@ from fastapi.staticfiles import StaticFiles
 # ---------------------------------------------------------------------------
 
 API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+ENVIRONMENT = os.environ.get("DASHBOARD_ENV", "development").strip().lower()
+if ENVIRONMENT == "production" and len(API_KEY) < 32:
+    raise RuntimeError("DASHBOARD_API_KEY must be at least 32 characters in production")
 BASE_DIR = Path(__file__).resolve().parent
 REPOS_DIR = BASE_DIR.parent  # sibling repos are in the parent directory
 
 # Known sibling repos to scan for evidence files
-SIBLING_REPOS = [
+_DEFAULT_REPOSITORIES = [
     "aws-agent-identity-guard",
     "hf-model-provenance-scanner",
     "mcp-agent-security-gateway",
     "llm-redteam-framework",
     "model-privacy-attacks",
     "adversarial-ml-lab",
-    # "PulseNet-RUL-Forecasting",  # ARCHIVED — not an active security product
     "attack-v19-core",
     "dataset-poisoning-detector",
 ]
+_configured_repositories = os.environ.get("DASHBOARD_REPOSITORIES", "")
+SIBLING_REPOS = (
+    [item.strip() for item in _configured_repositories.split(",") if item.strip()]
+    if _configured_repositories
+    else _DEFAULT_REPOSITORIES
+)
 
 # Common evidence file paths to search within each repo
 EVIDENCE_PATHS = [
@@ -244,7 +252,6 @@ async def api_status(_: str = Depends(verify_api_key)):
 
     return {
         "repos": status,
-        "repos_dir": str(REPOS_DIR),
         "ts": time.time(),
     }
 
@@ -282,34 +289,13 @@ async def api_metrics(_: str = Depends(verify_api_key)):
                 file_key = evidence_file.stem
                 repo_metrics["metrics"][file_key] = extracted
 
-        # Compute aggregate stats for this repo
-        all_fp_rates = []
-        all_detection_rates = []
-        total_tests = 0
-
-        for file_metrics in repo_metrics["metrics"].values():
-            for key in ("fp_rate", "false_positive_rate"):
-                if key in file_metrics and isinstance(file_metrics[key], (int, float)):
-                    all_fp_rates.append(file_metrics[key])
-            for key in ("detection_rate", "recall"):
-                if key in file_metrics and isinstance(file_metrics[key], (int, float)):
-                    all_detection_rates.append(file_metrics[key])
-            for key in ("test_count", "total_tests"):
-                if key in file_metrics and isinstance(file_metrics[key], int):
-                    total_tests += file_metrics[key]
-
+        # Evidence files can describe different datasets, attack populations,
+        # seeds, and measurement methods. Do not average unrelated precision,
+        # recall, false-positive, or detection rates across files. Preserve each
+        # artifact's own metrics and summarize only document counts.
         repo_metrics["summary"] = {
-            "avg_fp_rate": (
-                round(sum(all_fp_rates) / len(all_fp_rates), 4)
-                if all_fp_rates
-                else None
-            ),
-            "avg_detection_rate": (
-                round(sum(all_detection_rates) / len(all_detection_rates), 4)
-                if all_detection_rates
-                else None
-            ),
-            "total_tests": total_tests if total_tests > 0 else None,
+            "evidence_documents_with_metrics": len(repo_metrics["metrics"]),
+            "aggregation_policy": "no_cross_benchmark_metric_averaging",
         }
 
         aggregated[repo_name] = repo_metrics
