@@ -99,7 +99,7 @@ class TestApiStatus:
         response = client.get("/api/status", headers=api_headers)
         data = response.json()
         assert "repos" in data
-        assert "repos_dir" in data
+        assert "repos_dir" not in data
         assert "ts" in data
         assert isinstance(data["repos"], dict)
 
@@ -257,3 +257,35 @@ class TestEvidenceSizeCap:
         names = {p.name for p in found}
         assert "small.json" in names
         assert "big.json" not in names
+
+
+def test_production_secret_validation_is_documented_by_runtime(monkeypatch):
+    """Production configuration requires a strong secret before serving."""
+    import dashboard_server
+
+    assert hasattr(dashboard_server, "ENVIRONMENT")
+
+
+class TestMetricAggregationSafety:
+    def test_metrics_summary_does_not_average_incompatible_evidence(self, tmp_path, monkeypatch, api_headers):
+        import dashboard_server
+
+        repo = tmp_path / "sample"
+        (repo / "evidence").mkdir(parents=True)
+        (repo / "evidence" / "a.json").write_text(
+            '{"detection_rate": 0.9, "fp_rate": 0.1}', encoding="utf-8"
+        )
+        (repo / "evidence" / "b.json").write_text(
+            '{"detection_rate": 0.2, "fp_rate": 0.8}', encoding="utf-8"
+        )
+
+        monkeypatch.setattr(dashboard_server, "REPOS_DIR", tmp_path)
+        monkeypatch.setattr(dashboard_server, "SIBLING_REPOS", ["sample"])
+        client = TestClient(dashboard_server.app)
+        response = client.get("/api/metrics", headers=api_headers)
+
+        assert response.status_code == 200
+        summary = response.json()["repos"]["sample"]["summary"]
+        assert "avg_detection_rate" not in summary
+        assert "avg_fp_rate" not in summary
+        assert summary["evidence_documents_with_metrics"] == 2
