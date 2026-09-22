@@ -282,7 +282,7 @@ body { padding-top: 0; }
   border: 1px solid;
 }
 .rtype-working  { color: var(--teal);   border-color: rgba(45,212,191,.35); background: rgba(45,212,191,.06); }
-.rtype-prototype{ color: var(--amber);  border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.06); }
+.rtype-operational{ color: var(--amber);  border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.06); }
 .rtype-spec     { color: var(--violet); border-color: rgba(167,139,250,.35); background: rgba(167,139,250,.06); }
 .rtype-smoke    { color: var(--muted);  border-color: rgba(122,130,153,.35); background: rgba(122,130,153,.06); }
 .rtype-viz      { color: var(--dim);    border-color: rgba(74,80,104,.5);   background: rgba(74,80,104,.08); }
@@ -341,7 +341,7 @@ body { padding-top: 0; }
 </section>
 
 <!-- Featured three -->
-<div class="featured-label">Three strongest stories — working prototypes with real benchmark evidence</div>
+<div class="featured-label">Three strongest systems — production-oriented implementations with scoped evidence</div>
 <div class="featured-grid">
 
   <!-- MCP -->
@@ -427,8 +427,8 @@ body { padding-top: 0; }
 
   <div class="filter-tabs" id="filter-tabs">
     <button class="ftab active" data-filter="all">All</button>
-    <button class="ftab" data-filter="working">Working prototype</button>
-    <button class="ftab" data-filter="prototype">Prototype</button>
+    <button class="ftab" data-filter="working">Operational system</button>
+    <button class="ftab" data-filter="operational">Production-oriented system</button>
     <button class="ftab" data-filter="spec">Architecture spec</button>
     <button class="ftab" data-filter="smoke">Smoke tests</button>
     <button class="ftab" data-filter="viz">Visualization</button>
@@ -443,7 +443,7 @@ body { padding-top: 0; }
       </div>
       <p>5-layer MCP tool-call firewall. 37/37 blocked on the fixed bundled self-test catalog; this is a regression signal, not a real-world detection rate.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-working">Working prototype</span>
+        <span class="repo-type-badge rtype-working">Operational system</span>
         <span class="repo-metric text-amber">37/37 self-test</span>
       </div>
     </a>
@@ -454,7 +454,7 @@ body { padding-top: 0; }
       </div>
       <p>Supply chain attack scanner for HuggingFace. Internal fixture suite: 12/12 detected. Not a general detection rate.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-working">Working prototype</span>
+        <span class="repo-type-badge rtype-working">Operational system</span>
         <span class="repo-metric text-teal">12/12 fixtures</span>
       </div>
     </a>
@@ -465,40 +465,40 @@ body { padding-top: 0; }
       </div>
       <p>Prompt-injection detector. F1=0.9714 grouped held-out / 0.7188 novel-phrasing OOD. Gap documented.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-working">Working prototype</span>
+        <span class="repo-type-badge rtype-working">Operational system</span>
         <span class="repo-metric text-amber">F1 0.97 → 0.7188 OOD</span>
       </div>
     </a>
 
-    <a class="repo-card" data-type="prototype" href="./adversarial-ml-lab/">
+    <a class="repo-card" data-type="operational" href="./adversarial-ml-lab/">
       <div class="repo-card-top">
         <h4>Adversarial ML Lab</h4>
       </div>
       <p>FGSM/PGD/C&W attacks + Randomized Smoothing defense. CIFAR-10 SmallCNN measured: clean 71.82%, PGD-20 0.00% at ε=8/255.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
         <span class="repo-metric text-muted">71.82% → 0.00% (PGD-20)</span>
       </div>
     </a>
 
-    <a class="repo-card" data-type="prototype" href="./model-privacy-attacks/">
+    <a class="repo-card" data-type="operational" href="./model-privacy-attacks/">
       <div class="repo-card-top">
         <h4>Model Privacy Attacks</h4>
       </div>
       <p>Membership inference + model extraction. Adult/OpenML DirectMIA mean AUC 0.557 across 5 seeds.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
         <span class="repo-metric text-muted">MI AUC 0.557</span>
       </div>
     </a>
 
-    <a class="repo-card" data-type="prototype" href="./dataset-poisoning-detector/">
+    <a class="repo-card" data-type="operational" href="./dataset-poisoning-detector/">
       <div class="repo-card-top">
         <h4>Dataset Poisoning Detector</h4>
       </div>
       <p>Training data anomaly flagging. ROC-AUC ~0.54 (baseline). Honest result — target is 0.75.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
         <span class="repo-metric text-muted">ROC-AUC ~0.54</span>
       </div>
     </a>
@@ -514,35 +514,35 @@ body { padding-top: 0; }
       </div>
     </a>
 
-    <a class="repo-card" data-type="prototype" href="./attack-v19-core/">
+    <a class="repo-card" data-type="operational" href="./attack-v19-core/">
       <div class="repo-card-top">
         <h4>ATT&CK v19 Core</h4>
       </div>
       <p>MITRE ATT&CK v19 data models. 222 techniques, 475 subs, 17 revoked remapped. 18/18 tests pass.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-prototype">Core library</span>
+        <span class="repo-type-badge rtype-operational">Core library</span>
         <span class="repo-metric text-muted">18/18 tests</span>
       </div>
     </a>
 
-    <a class="repo-card" data-type="prototype" href="./attack-detection-engine/">
+    <a class="repo-card" data-type="operational" href="./attack-detection-engine/">
       <div class="repo-card-top">
         <h4>Attack Detection Engine</h4>
       </div>
       <p>5-source telemetry pipeline. 42 detection rules mapping to ATT&CK. 80%+ coverage enforced in CI.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-prototype">Core library</span>
+        <span class="repo-type-badge rtype-operational">Core library</span>
         <span class="repo-metric text-muted">42 rules</span>
       </div>
     </a>
 
-    <a class="repo-card" data-type="prototype" href="./aws-agent-identity-guard/">
+    <a class="repo-card" data-type="operational" href="./aws-agent-identity-guard/">
       <div class="repo-card-top">
         <h4>AWS Agent Identity Guard</h4>
       </div>
       <p>Static IAM policy linter for AI agent workloads. Checks wildcards, PassRole, trust boundary issues.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-prototype">Prototype</span>
+        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
         <span class="repo-metric text-muted">Static analysis</span>
       </div>
     </a>
