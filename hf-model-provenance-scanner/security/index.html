@@ -167,7 +167,7 @@ async function checkServer() {
       document.getElementById('nav-badge').textContent = 'Live';
     } else if (d.proxy === 'ok') {
       document.getElementById('nav-badge').textContent = 'Server up — hf-scanner missing';
-      document.getElementById('nav-badge').className = 'ds-nav-badge prototype';
+      document.getElementById('nav-badge').className = 'ds-nav-badge operational';
       document.getElementById('offline-notice').querySelector('div').innerHTML =
         '<strong style="color:var(--amber)">hf-scanner not installed.</strong> Run: <code>pip install hf-model-provenance-scanner</code>';
     }
