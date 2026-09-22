@@ -36,7 +36,16 @@ ENVIRONMENT = os.environ.get("DASHBOARD_ENV", "development").strip().lower()
 if ENVIRONMENT == "production" and len(API_KEY) < 32:
     raise RuntimeError("DASHBOARD_API_KEY must be at least 32 characters in production")
 BASE_DIR = Path(__file__).resolve().parent
-REPOS_DIR = BASE_DIR.parent  # sibling repos are in the parent directory
+_configured_evidence_root = os.environ.get("DASHBOARD_EVIDENCE_ROOT", "").strip()
+REPOS_DIR = (
+    Path(_configured_evidence_root).expanduser().resolve()
+    if _configured_evidence_root
+    else BASE_DIR.parent
+)
+if ENVIRONMENT == "production" and not _configured_evidence_root:
+    raise RuntimeError("DASHBOARD_EVIDENCE_ROOT is required in production")
+if ENVIRONMENT == "production" and not REPOS_DIR.is_dir():
+    raise RuntimeError(f"DASHBOARD_EVIDENCE_ROOT does not exist: {REPOS_DIR}")
 
 # Known sibling repos to scan for evidence files
 _DEFAULT_REPOSITORIES = [
@@ -198,6 +207,16 @@ async def health():
 # ---------------------------------------------------------------------------
 # GET /  — serve main dashboard
 # ---------------------------------------------------------------------------
+
+
+@app.get("/ready")
+async def ready():
+    """Readiness requires configured authentication and a readable evidence root."""
+    if not API_KEY:
+        raise HTTPException(status_code=503, detail="DASHBOARD_API_KEY is not configured")
+    if not REPOS_DIR.is_dir():
+        raise HTTPException(status_code=503, detail="evidence root is unavailable")
+    return {"status": "ready", "repositories_configured": len(SIBLING_REPOS)}
 
 
 @app.get("/", response_class=HTMLResponse)
