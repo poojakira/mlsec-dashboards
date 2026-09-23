@@ -213,7 +213,9 @@ async def health():
 async def ready():
     """Readiness requires configured authentication and a readable evidence root."""
     if not API_KEY:
-        raise HTTPException(status_code=503, detail="DASHBOARD_API_KEY is not configured")
+        raise HTTPException(
+            status_code=503, detail="DASHBOARD_API_KEY is not configured"
+        )
     if not REPOS_DIR.is_dir():
         raise HTTPException(status_code=503, detail="evidence root is unavailable")
     return {"status": "ready", "repositories_configured": len(SIBLING_REPOS)}
