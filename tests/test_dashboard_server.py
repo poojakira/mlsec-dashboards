@@ -267,7 +267,9 @@ def test_production_secret_validation_is_documented_by_runtime(monkeypatch):
 
 
 class TestMetricAggregationSafety:
-    def test_metrics_summary_does_not_average_incompatible_evidence(self, tmp_path, monkeypatch, api_headers):
+    def test_metrics_summary_does_not_average_incompatible_evidence(
+        self, tmp_path, monkeypatch, api_headers
+    ):
         import dashboard_server
 
         repo = tmp_path / "sample"
