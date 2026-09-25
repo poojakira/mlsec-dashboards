@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LLM Redteam Framework — Live Dashboard</title>
+<title>LLM Redteam Framework — Static Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 <style>
@@ -70,7 +70,7 @@
 
 <div class="ds-page">
   <div class="ds-page-header">
-    <h1>LLM Redteam Framework <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Live</span></h1>
+    <h1>LLM Redteam Framework <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Static</span></h1>
     <div class="ds-meta">
       <span>Runs <code>redteam-eval</code> via dashboard_server, streams stdout</span>
       <span>·</span>
@@ -78,10 +78,15 @@
     </div>
   </div>
 
+  <div class="ds-honesty">
+    <strong>Static, last-measured data — not a live feed.</strong>
+    Metrics below are from the last committed benchmark run. This page can optionally stream from a <code>dashboard_server</code> proxy on <code>localhost:9001</code>, but that proxy is <strong>not included in this repo</strong> (only an <code>8080</code> server with <code>/api/*</code> ships here). Without it, the page degrades to the embedded sample data.
+  </div>
+
   <div class="offline-notice" id="offline-notice">
     <div>
       <strong style="color:var(--amber)">dashboard_server not running.</strong>
-      Start it to run live evals: <code>python dashboard_server.py</code><br>
+      The optional proxy on <code>localhost:9001</code> is not shipped in this repo.<br>
       Metrics below are from the last committed benchmark run.
     </div>
   </div>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MCP Security Gateway — Live Dashboard</title>
+<title>MCP Security Gateway — Static Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 <style>
@@ -85,7 +85,7 @@
 
 <div class="ds-page">
   <div class="ds-page-header">
-    <h1>MCP Security Gateway Monitor <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Live</span></h1>
+    <h1>MCP Security Gateway Monitor <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Static</span></h1>
     <div class="ds-meta">
       <span>Polls <code>localhost:8080</code> via dashboard_server on <code>localhost:9001</code></span>
       <span>·</span>
@@ -94,9 +94,8 @@
   </div>
 
     <div class="ds-honesty">
-    <strong>Live data when mcp-gateway is running.</strong>
-    Stats update every 2 seconds from <code>localhost:8080/v1/metrics</code> via dashboard_server.
-    When the gateway is offline, all stat cards show <code>—</code>. The committed offline red-team self-test currently blocks 37/37 fixed catalog attacks (100%); this is a regression signal against known payloads, not a real-world detection rate. Live metrics show actual request counts.
+    <strong>Static, last-measured data — not a live feed.</strong>
+    This page renders committed sample data. It can optionally poll a <code>dashboard_server</code> proxy on <code>localhost:9001</code> (endpoints <code>/api/*</code>, <code>/sse/*</code>, <code>/v1/metrics</code>), but that proxy is <strong>not included in this repo</strong> — only an <code>8080</code> server with <code>/api/*</code> ships here. Without the proxy running, the page degrades to the embedded sample data and stat cards show <code>—</code>. The committed offline red-team self-test currently blocks 37/37 fixed catalog attacks (100%); this is a regression signal against known payloads, not a real-world detection rate.
   </div>
 <!-- Connection status bar -->
   <div class="conn-bar" id="conn-bar">
@@ -155,10 +154,10 @@
 
   <!-- Live tool call inspector -->
   <div class="ds-section" style="margin-top:24px">
-    <div class="ds-section-title">Live tool call inspector — POST to /v1/inspect_call</div>
+    <div class="ds-section-title">Tool call inspector — optional, requires the <code>localhost:9001</code> proxy (not included)</div>
     <div class="ds-panel">
       <div class="inspect-form">
-        <label style="font-size:.75rem;color:var(--muted)">Paste a tool call JSON and send it live to the running gateway:</label>
+        <label style="font-size:.75rem;color:var(--muted)">Paste a tool call JSON. This only works if you run the optional <code>dashboard_server</code> proxy (POST <code>/v1/inspect_call</code>), which is not shipped in this repo; otherwise the button stays disabled:</label>
         <textarea id="inspect-input">{
   "tool_name": "send_email",
   "arguments": {

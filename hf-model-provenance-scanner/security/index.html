@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HF Model Provenance Scanner — Live Dashboard</title>
+<title>HF Model Provenance Scanner — Static Dashboard</title>
 <link rel="stylesheet" href="../../shared/design-system.css">
 <style>
 .scan-form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -73,7 +73,7 @@
 
 <div class="ds-page">
   <div class="ds-page-header">
-    <h1>HF Model Provenance Scanner <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Live</span></h1>
+    <h1>HF Model Provenance Scanner <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Static</span></h1>
     <div class="ds-meta">
       <span>Runs <code>hf-scanner &lt;model_id&gt; --format json</code> via dashboard_server</span>
       <span>·</span>
@@ -83,12 +83,16 @@
     </div>
   </div>
 
+  <div class="ds-honesty">
+    <strong>Static, last-measured data — not a live feed.</strong>
+    Results below come from the committed benchmark evidence archive. The scan form can optionally call a <code>dashboard_server</code> proxy on <code>localhost:9001</code>, but that proxy is <strong>not included in this repo</strong> (only an <code>8080</code> server with <code>/api/*</code> ships here). Without it, the page degrades to the embedded sample data.
+  </div>
+
   <!-- Offline notice (shown when dashboard_server not running) -->
   <div class="offline-notice" id="offline-notice">
     <div>
       <strong style="color:var(--amber)">dashboard_server not running.</strong>
-      Start it to scan real models: <code>python dashboard_server.py</code><br>
-      Without it, results below are from the benchmark evidence archive.
+      The optional proxy on <code>localhost:9001</code> is not shipped in this repo. Without it, results below are from the benchmark evidence archive.
     </div>
   </div>
 

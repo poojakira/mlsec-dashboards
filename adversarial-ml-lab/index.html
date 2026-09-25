@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Adversarial ML Lab — Live Dashboard</title>
+<title>Adversarial ML Lab — Static Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 </head>
@@ -32,10 +32,10 @@
 
   <div class="ds-honesty">
     <strong>Measured benchmark data from <code>results/cifar10_smallcnn_real.json</code>.</strong>
-    On the committed CPU SmallCNN run, clean CIFAR-10 accuracy is 71.82%; PGD-20 at ε=8/255 reduces robust accuracy to 0.00%. This is a measured small-model benchmark, not the synthetic ResNet-18 projection.
+    On the committed CPU SmallCNN run, clean CIFAR-10 accuracy is 71.82%; PGD-20 at ε=8/255 reduces robust accuracy to 0.00%. This is a measured small-model benchmark, not the synthetic ResNet-18 projection. The "run live" panel below is optional: it targets a <code>dashboard_server</code> proxy on <code>localhost:9001</code> that is <strong>not included in this repo</strong>. Without it, this page shows the static, last-measured data above.
   </div>
 
-  <!-- Live run panel -->
+  <!-- Optional run panel (requires an external dashboard_server proxy, not shipped here) -->
   <div class="ds-panel" style="margin-bottom:20px">
     <div class="ds-panel-title">Run live attack evaluation</div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">

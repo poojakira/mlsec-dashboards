@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dataset Poisoning Detector — Live Dashboard</title>
+<title>Dataset Poisoning Detector — Static Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 </head>
@@ -23,8 +23,8 @@
     </div>
   </div>
   <div class="ds-honesty">
-    <strong>ROC-AUC ~0.54 — barely above random baseline of 0.50.</strong>
-    Target is 0.75. That gap has not been closed. Run a live eval below if the package is installed.
+    <strong>Static, last-measured data — ROC-AUC ~0.54, barely above random baseline of 0.50.</strong>
+    Target is 0.75. That gap has not been closed. The "run live" panel below is optional: it targets a <code>dashboard_server</code> proxy on <code>localhost:9001</code> that is <strong>not included in this repo</strong>. Without it, this page shows the static, last-measured value above.
   </div>
 
   <div class="ds-panel" style="margin-bottom:20px">
