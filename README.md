@@ -1,6 +1,6 @@
 # mlsec-dashboards
 
-**Repository owner & maintainer:** Pooja Kiran ([@poojakira](https://github.com/poojakira)) — I own and maintain this repository and drive its design, engineering, validation, documentation, and evidence-backed releases.
+**Maintainer:** Pooja Kiran ([@poojakira](https://github.com/poojakira))
 
 FastAPI server that aggregates JSON evidence files from 8 active ML security repos into browsable dashboards with authenticated API endpoints.
 
@@ -171,7 +171,7 @@ pytest tests/ -v
 - **File size limits**: Evidence files larger than 10 MB are skipped to prevent memory exhaustion.
 - **CORS lockdown**: Only `localhost:8080` and `localhost:3000` origins are allowed. GET method only.
 - **No secrets in the repo**: API keys come from environment variables.
-- **Intended scope**: This is an authenticated internal production service. Public exposure requires an external identity-aware gateway/TLS layer and environment-specific rate limiting; direct unauthenticated internet exposure is unsupported.
+- **Intended scope**: This is an authenticated internal developer tool. Public exposure would require an external identity-aware gateway/TLS layer and environment-specific rate limiting; direct unauthenticated internet exposure is unsupported.
 
 ---
 
@@ -256,6 +256,6 @@ Each per-project dashboard reports metrics from that project's committed test su
 
 ---
 
-## Engineering Lessons
+## Notes
 
-The most useful thing this project demonstrates is that honesty scales better than polish. Showing a scoped 37/37 bundled self-test result with its limitations earns more trust than presenting it as a real-world detection rate. The same principle applies to the architecture: a flat file server with no database is the right tool when the requirement is "show benchmark results to humans." Over-engineering this into a React SPA with a Postgres backend would add deployment complexity without improving the core value: making evidence browsable.
+Dashboard results are reported with their scope and limitations rather than as headline numbers: the 37/37 bundled self-test, for example, is labeled a fixed regression catalog rather than a real-world detection rate. The architecture is a flat file server with no database because the requirement is to make benchmark evidence browsable; a database or SPA front-end would add deployment complexity without changing that core function.
