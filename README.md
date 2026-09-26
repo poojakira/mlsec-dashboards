@@ -211,7 +211,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 | HTTPS | Not included | Intended for local development |
 | Monitoring/alerting | None | No health check integrations |
 | CI/CD | Present | GitHub Actions directory exists |
-| Test coverage | Good | 25 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap |
+| Test coverage | Good | 27 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
 **Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.

@@ -68,7 +68,7 @@ On Windows PowerShell, `curl` is an alias for `Invoke-WebRequest`; use
 
 ```bash
 pytest tests/ -q
-# 25 passed
+# 27 passed
 ```
 
 Covers: unauthenticated health check, API-key auth (accept/reject/missing-env→500),
