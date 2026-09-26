@@ -1,5 +1,18 @@
 # mlsec-dashboards
 
+<!-- security-systems-poster -->
+## Research Poster
+
+**Security Systems / 10 — Evidence-Centered Visualization for Machine-Learning Security Engineering**
+
+[![Research poster](poster/poster.png)](poster/poster_36x48.pdf)
+
+> Technical research poster (36 x 48 in). Click the image for the print-resolution **[PDF](poster/poster_36x48.pdf)**.
+> Every metric on it is evidence-backed; historical/projected numbers are labeled and separated from current results.
+> Part of the *Pooja Kiran - Security Systems* engineering poster collection.
+<!-- security-systems-poster -->
+
+
 **Maintainer:** Pooja Kiran ([@poojakira](https://github.com/poojakira))
 
 FastAPI server that aggregates JSON evidence files from 8 active ML security repos into browsable dashboards with authenticated API endpoints.
