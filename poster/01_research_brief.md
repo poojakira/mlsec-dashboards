@@ -1,7 +1,7 @@
 # Research Brief — Poster 10
 
 ## Repository
-`github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • HEAD 89a038a • verified 2026-09-26
+`github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • HEAD 30f729d • verified 2026-09-26
 
 ## Academic Project Title
 **Evidence-Centered Visualization for ML Security Engineering**
@@ -36,7 +36,7 @@ O4 — Show weak results explicitly
 
 ## Current Verified Evidence + Claim Ledger
 - **VERIFIED_CURRENT** — Aggregates evidence from 8 active ML security repos — README; dashboard_server.py discovers sibling evidence/*.json.
-- **VERIFIED_CURRENT** — 27 test functions — Counted def test_ in tests/ (HEAD 89a038a).
+- **VERIFIED_CURRENT** — 27 test functions — Counted def test_ in tests/ (HEAD 30f729d).
 - **VERIFIED_CURRENT** — Shows weak results explicitly (OOD F1 0.72, ROC-AUC 0.54) — README states weak-alongside-strong design; numbers sourced from sibling evidence files.
 - **VERIFIED_CURRENT** — Token-authed REST API + static HTML — README features; dashboard_server.py.
 - **UNSUPPORTED (disclaimed)** — Live SOC monitoring / real-time alerting — README: static evidence snapshots, not live monitoring. Not claimed.
