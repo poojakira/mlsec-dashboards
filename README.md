@@ -15,17 +15,50 @@
 
 **Maintainer:** Pooja Kiran ([@poojakira](https://github.com/poojakira))
 
-FastAPI server that aggregates JSON evidence files from 8 active ML security repos into browsable dashboards with authenticated API endpoints.
+## Overview
 
----
+`mlsec-dashboards` is a FastAPI server that aggregates committed JSON evidence files from the sibling ML security repos into browsable per-project HTML dashboards, with token-authenticated API endpoints. It surfaces the *actual* numbers from each tool's committed evidence — weak results shown alongside strong ones — so there is one honest place to see what the tools report and their stated limitations.
 
-## What This Does
+## Verified Snapshot
 
-Each of my ML security tools produces JSON output from benchmarks and test runs. This server collects those files from sibling repo directories, renders per-project HTML dashboards, and exposes REST endpoints for programmatic access.
+Reproduced on current `main` (Python 3.12).
 
-The dashboards show actual numbers from committed evidence files. Weak results are shown alongside strong ones (e.g., ROC-AUC 0.54 on one attack type, F1 0.97 on grouped held-out templates and 0.7188 on novel-phrasing OOD data). The point is to have one URL where I can show someone what the tools report, with honest numbers and stated limitations.
+| Metric | Current verified result |
+|---|---:|
+| Tests | 27 passing |
+| Coverage | auth, health, metrics, dashboard rendering, evidence loading |
+| Source repos aggregated | 8 active ML security repos |
+| Auth | token-based on API routes |
 
----
+## Security Problem
+
+Each ML security tool emits JSON from benchmarks and test runs, but those results are scattered across repos and easy to misread or cherry-pick. This server centralizes them, rendering evidence-backed dashboards that show gaps and weak results explicitly (e.g., ROC-AUC 0.54 on one attack type alongside grouped F1 0.97 and novel-phrasing OOD 0.7188) rather than only highlights.
+
+## Threat Model & Scope
+
+**In scope:** read-only aggregation and visualization of committed evidence JSON; token-authenticated API routes.
+
+**Out of scope / not claimed:** It does not run the security tools or generate findings — it only reads their committed evidence files. It is a presentation/visualization layer, not a detection or enforcement component. Numbers shown are exactly what the source repos committed.
+
+## Architecture
+
+```text
+Sibling repos' evidence/*.json
+      |
+      v
+FastAPI server: discover + load evidence  -->  per-project HTML dashboards
+      |
+      v
+Token-authenticated REST endpoints (aggregated metrics for CI)
+```
+
+## Core Capabilities
+
+- Discovers sibling repos and reads their `evidence/*.json` files
+- Per-project HTML dashboards with a shared design system
+- Aggregated metrics endpoint for CI integration
+- Token-based authentication on API routes
+- Shows gaps and weak results explicitly, not just highlights
 
 ## Features
 
