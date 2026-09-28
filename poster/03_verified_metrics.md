@@ -1,11 +1,11 @@
 # Verified Metrics — Poster 10
 
-MIT • Python 3.12 • HEAD 89a038a • verified 2026-09-26. Verified for this poster on Windows / CPython 3.12.10.
+MIT • Python 3.12 • HEAD 30f729d • verified 2026-09-26. Verified for this poster on Windows / CPython 3.12.10.
 
 ## Headline cards
 - 8 — REPOS AGGREGATED
 - 27 — TEST FUNCTIONS
-Notes: 8 active ML security repos' evidence aggregated. 27 test_ functions (HEAD 89a038a).
+Notes: 8 active ML security repos' evidence aggregated. 27 test_ functions (HEAD 30f729d).
 
 ## Verified surface
 | Item | Value |
