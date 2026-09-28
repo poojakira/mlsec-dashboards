@@ -1,5 +1,7 @@
 # Research Brief — Poster 10
 
+> Evidence status: This is a dated repository snapshot at the commit identified below. `VERIFIED_AT_SNAPSHOT` means verified for that commit and environment; it does not assert the same result on the latest `main`. Compare newer claims with the repository evidence before reuse.
+
 ## Repository
 `github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • HEAD 30f729d • verified 2026-09-26
 
@@ -34,11 +36,11 @@ O4 — Show weak results explicitly
 ## Methodology
 1 Discover (repos) -> 2 Read (evidence) -> 3 Parse (JSON) -> 4 Render (HTML) -> 5 Serve (REST) -> 6·7 Auth (token)
 
-## Current Verified Evidence + Claim Ledger
-- **VERIFIED_CURRENT** — Aggregates evidence from 8 active ML security repos — README; dashboard_server.py discovers sibling evidence/*.json.
-- **VERIFIED_CURRENT** — 27 test functions — Counted def test_ in tests/ (HEAD 30f729d).
-- **VERIFIED_CURRENT** — Shows weak results explicitly (OOD F1 0.72, ROC-AUC 0.54) — README states weak-alongside-strong design; numbers sourced from sibling evidence files.
-- **VERIFIED_CURRENT** — Token-authed REST API + static HTML — README features; dashboard_server.py.
+## Evidence at Poster Snapshot + Claim Ledger
+- **VERIFIED_AT_SNAPSHOT** — Aggregates evidence from 8 active ML security repos — README; dashboard_server.py discovers sibling evidence/*.json.
+- **VERIFIED_AT_SNAPSHOT** — 27 test functions — Counted def test_ in tests/ (HEAD 30f729d).
+- **VERIFIED_AT_SNAPSHOT** — Shows weak results explicitly (OOD F1 0.72, ROC-AUC 0.54) — README states weak-alongside-strong design; numbers sourced from sibling evidence files.
+- **VERIFIED_AT_SNAPSHOT** — Token-authed REST API + static HTML — README features; dashboard_server.py.
 - **UNSUPPORTED (disclaimed)** — Live SOC monitoring / real-time alerting — README: static evidence snapshots, not live monitoring. Not claimed.
 
 ## Important Negative / Honest Results
