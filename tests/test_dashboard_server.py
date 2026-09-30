@@ -293,3 +293,31 @@ class TestMetricAggregationSafety:
         assert "avg_detection_rate" not in summary
         assert "avg_fp_rate" not in summary
         assert summary["evidence_documents_with_metrics"] == 2
+
+class TestSecurityBoundaryRegression:
+    def test_rate_limit_budget_is_enforced_per_identity(self, monkeypatch):
+        import dashboard_server
+
+        monkeypatch.setattr(dashboard_server, "RATE_LIMIT_RPM", 2)
+        dashboard_server._rate_windows.clear()
+
+        assert dashboard_server._consume_rate_limit("client-a") is True
+        assert dashboard_server._consume_rate_limit("client-a") is True
+        assert dashboard_server._consume_rate_limit("client-a") is False
+        assert dashboard_server._consume_rate_limit("client-b") is True
+
+    def test_evidence_repo_name_cannot_escape_root(self, tmp_path, monkeypatch):
+        import dashboard_server
+
+        monkeypatch.setattr(dashboard_server, "REPOS_DIR", tmp_path)
+        outside = tmp_path.parent / "outside"
+        outside.mkdir(exist_ok=True)
+        (outside / "evidence").mkdir(exist_ok=True)
+
+        assert dashboard_server._find_evidence_files("../outside") == []
+
+    def test_cors_never_uses_wildcard_origin(self):
+        import dashboard_server
+
+        assert "*" not in dashboard_server.ALLOWED_ORIGINS
+
