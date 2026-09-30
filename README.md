@@ -26,7 +26,7 @@ Reproduced on current `main` (Python 3.12).
 
 | Metric | Current verified result |
 |---|---:|
-| Tests | 27 passing |
+| Tests | 36 passing (2026-09-30 local follow-up) |
 | Coverage | auth, health, metrics, dashboard rendering, evidence loading |
 | Source repos aggregated | 8 active ML security repos |
 | Auth | token-based on API routes |
@@ -179,7 +179,7 @@ pip install -r requirements.txt
 
 ```bash
 # Set the API key (required for /api/* endpoints)
-export DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+export DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")import secrets; print(secrets.token_urlsafe(32))')"
 
 # Start the server
 uvicorn dashboard_server:app --port 8080
@@ -213,10 +213,10 @@ pytest tests/ -v
 ## Security Considerations
 
 - **Token-based authentication**: All `/api/*` endpoints require a valid `X-API-Key` header. Comparison uses `hmac.compare_digest` to prevent timing attacks.
-- **Server misconfiguration protection**: If `DASHBOARD_API_KEY` is not set, the server returns HTTP 500 rather than silently allowing unauthenticated access.
+- **Server misconfiguration protection**: If `DASHBOARD_API_KEY` is not set, the server returns HTTP 503 rather than silently allowing unauthenticated access.
 - **No code execution**: The server never runs `subprocess`, `exec`, or `eval`. It only reads static JSON files from known directories.
-- **File size limits**: Evidence files larger than 10 MB are skipped to prevent memory exhaustion.
-- **CORS lockdown**: Only `localhost:8080` and `localhost:3000` origins are allowed. GET method only.
+- **Evidence limits**: Only contained, non-symlink JSON files below 10 MB are read, with a read-time byte cap and a maximum of 200 discovered files per repository. Only finite numeric metric values are returned.
+- **CORS lockdown**: Development permits explicit localhost/127.0.0.1 origins; production defaults to same-origin and allows configured explicit origins. GET method only.
 - **No secrets in the repo**: API keys come from environment variables.
 - **Intended scope**: This is an authenticated internal developer tool. Public exposure would require an external identity-aware gateway/TLS layer and environment-specific rate limiting; direct unauthenticated internet exposure is unsupported.
 
@@ -254,14 +254,14 @@ Each per-project dashboard reports metrics from that project's committed test su
 | Authentication | Done | API key with constant-time compare |
 | Error handling | Done | JSON parse failures return None gracefully; missing repos reported; index.html read/decode errors return a clean fallback (no traceback); evidence files >10 MB skipped |
 | Logging | Minimal | Uvicorn access logs only |
-| Rate limiting | Not implemented | Acceptable for localhost use |
+| Rate limiting | Process-local | Per-peer sliding minute budget, bounded identity table, inactive bucket cleanup; proxy/distributed enforcement remains external |
 | HTTPS | Not included | Intended for local development |
 | Monitoring/alerting | None | No health check integrations |
 | CI/CD | Present | GitHub Actions directory exists |
-| Test coverage | Good | 27 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap |
+| Test coverage | Good | 36 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
-**Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
+**Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
 
 ---
 
@@ -332,3 +332,21 @@ Keep runtime credentials outside Git. If this repository provides an `.env.examp
 Do not commit AWS access keys or session credentials, API tokens, service-account JSON, private keys, package-manager credentials, Terraform state, or secret-bearing `tfvars`. CI/deployment credentials belong in GitHub Actions secrets or the deployment provider's secret manager. AWS account IDs are identifiers; AWS access-key IDs, secret access keys, and session tokens are credentials.
 
 If a real credential is ever exposed, revoke or rotate it at the provider first, then remove it from the working tree and reachable Git history. The Security Hygiene workflow checks the current tree and reachable history for common credential formats without printing matched secret values.
+
+
+## Security boundary follow-up — 2026-09-30
+
+API-key authentication authorizes read access to every configured evidence repository; it does not provide per-user roles, per-repository permissions, or tenant isolation. Serve only evidence intended for all key holders. Public static dashboards and health/readiness endpoints remain public. This server has no upload or mutation endpoint.
+
+The API request budget is keyed to the connection peer, so rotating invalid keys cannot reset it. It uses a monotonic clock, at most 4,096 active identity buckets, and fail-closed admission when the table is full. Budgets are per process: workers/replicas and shared proxy peers need enforcement at a trusted gateway. Forwarded headers are not used directly by the limiter; configure the ASGI server's trusted proxy settings carefully. Static file and connection-level flood protection belongs at that gateway.
+
+Evidence storage must be operator-controlled and read-only to untrusted users. Symlink escapes and oversized reads are rejected, but the service is not a sandbox for a hostile local writer racing filesystem checks. Metrics containing strings, objects, booleans, or non-finite floats are ignored. The legacy HF renderer now escapes server-provided severity text and chooses CSS severity classes from a fixed allowlist.
+
+Verified locally: 36 pytest tests, Ruff lint/format, and a dated dependency advisory audit. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
+
+
+### Your local dashboard secret
+
+Each operator generates their own `DASHBOARD_API_KEY`; no owner credential or shared working key is distributed. You can copy the empty `.env.example` to `.env`, fill the key locally, and run `uvicorn dashboard_server:app --env-file .env --host 127.0.0.1 --port 8080`. The direct `python dashboard_server.py` command uses inherited environment variables and does not automatically load `.env`. Real `.env` and `.env.*` files are ignored; only empty/example templates may be committed. Production additionally requires a key of at least 32 characters and your own configured evidence root.
+
+A historical README at `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` contains a potential exposed dashboard application key. If you used it, generate a new key, replace the deployment environment/secret-store value, and restart every instance using it; update your clients through a private channel. GitHub cannot centrally revoke this application key. Its acceptance is controlled by each dashboard deployment, and deleting a Git history entry alone would not revoke it.

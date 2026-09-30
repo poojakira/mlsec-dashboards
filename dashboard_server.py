@@ -14,12 +14,13 @@ Environment Variables:
 
 from __future__ import annotations
 
-import hashlib
 import hmac
 import json
+import math
 import os
 import re
 import time
+from collections import deque
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +41,10 @@ if ENVIRONMENT == "production" and len(API_KEY) < 32:
 RATE_LIMIT_RPM = int(os.environ.get("DASHBOARD_RATE_LIMIT_RPM", "180"))
 if RATE_LIMIT_RPM < 1 or RATE_LIMIT_RPM > 10000:
     raise RuntimeError("DASHBOARD_RATE_LIMIT_RPM must be between 1 and 10000")
-_rate_windows: dict[str, list[float]] = {}
+_rate_windows: dict[str, deque[float]] = {}
+MAX_RATE_IDENTITIES = 4096
+MAX_EVIDENCE_BYTES = 10_000_000
+MAX_EVIDENCE_FILES = 200
 BASE_DIR = Path(__file__).resolve().parent
 _configured_evidence_root = os.environ.get("DASHBOARD_EVIDENCE_ROOT", "").strip()
 REPOS_DIR = (
@@ -71,7 +75,7 @@ SIBLING_REPOS = (
     else _DEFAULT_REPOSITORIES
 )
 _REPO_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,100}$")
-if any(not _REPO_NAME.fullmatch(name) for name in SIBLING_REPOS):
+if any(name in {".", ".."} or not _REPO_NAME.fullmatch(name) for name in SIBLING_REPOS):
     raise RuntimeError("DASHBOARD_REPOSITORIES contains an invalid repository name")
 
 _configured_origins = [
@@ -115,10 +119,17 @@ app = FastAPI(
 
 
 def _consume_rate_limit(identity: str) -> bool:
-    now = time.time()
+    now = time.monotonic()
     cutoff = now - 60.0
-    bucket = _rate_windows.setdefault(identity, [])
-    bucket[:] = [ts for ts in bucket if ts > cutoff]
+    # Drop inactive identities and fail closed if the bounded table is full.
+    for key in list(_rate_windows):
+        if not _rate_windows[key] or _rate_windows[key][-1] <= cutoff:
+            del _rate_windows[key]
+    if identity not in _rate_windows and len(_rate_windows) >= MAX_RATE_IDENTITIES:
+        return False
+    bucket = _rate_windows.setdefault(identity, deque())
+    while bucket and bucket[0] <= cutoff:
+        bucket.popleft()
     if len(bucket) >= RATE_LIMIT_RPM:
         return False
     bucket.append(now)
@@ -129,9 +140,8 @@ def _consume_rate_limit(identity: str) -> bool:
 async def _security_boundary(request: Request, call_next):
     if request.url.path.startswith("/api/"):
         peer = request.client.host if request.client else "unknown"
-        supplied = request.headers.get("X-API-Key", "")
-        identity = hashlib.sha256((supplied + "\0" + peer).encode()).hexdigest()[:32]
-        if not _consume_rate_limit(identity):
+        # Unauthenticated callers must not bypass the budget by rotating keys.
+        if not _consume_rate_limit(peer):
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Rate limit exceeded"},
@@ -167,7 +177,9 @@ async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
         raise HTTPException(
             status_code=503, detail="Dashboard authentication unavailable"
         )
-    if not api_key or not hmac.compare_digest(api_key, API_KEY):
+    if not api_key or not hmac.compare_digest(
+        api_key.encode("utf-8"), API_KEY.encode("utf-8")
+    ):
         raise HTTPException(status_code=401, detail="Invalid or missing API key.")
     return api_key
 
@@ -179,6 +191,10 @@ async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
 
 def _find_evidence_files(repo_name: str) -> list[Path]:
     """Find JSON evidence files in a sibling repo."""
+    if repo_name in {".", ".."} or not _REPO_NAME.fullmatch(repo_name):
+        return []
+    if (REPOS_DIR / repo_name).is_symlink():
+        return []
     repo_path = (REPOS_DIR / repo_name).resolve()
     try:
         repo_path.relative_to(REPOS_DIR)
@@ -188,30 +204,63 @@ def _find_evidence_files(repo_name: str) -> list[Path]:
         return []
 
     json_files: list[Path] = []
-
-    # Check known evidence directories
     for evidence_dir in EVIDENCE_PATHS:
         evidence_path = repo_path / evidence_dir
-        if evidence_path.is_dir():
-            for f in evidence_path.rglob("*.json"):
-                if f.is_file() and f.stat().st_size < 10_000_000:  # 10MB limit
+        if evidence_path.is_symlink() or not evidence_path.is_dir():
+            continue
+        # os.walk does not follow directory symlinks. Limit files returned.
+        for directory, dirs, files in os.walk(evidence_path, followlinks=False):
+            dirs[:] = [
+                name for name in dirs if not (Path(directory) / name).is_symlink()
+            ]
+            for name in files:
+                f = Path(directory) / name
+                if f.suffix == ".json" and _allowed_evidence_file(f):
                     json_files.append(f)
-
-    # Also check root-level evidence/results JSON files
+                    if len(json_files) >= MAX_EVIDENCE_FILES:
+                        return json_files
     for f in repo_path.glob("*.json"):
-        if f.is_file() and f.stat().st_size < 10_000_000:
+        if _allowed_evidence_file(f):
             json_files.append(f)
-
+            if len(json_files) >= MAX_EVIDENCE_FILES:
+                break
     return json_files
 
 
-def _safe_read_json(path: Path) -> dict[str, Any] | list | None:
-    """Safely read and parse a JSON file. Returns None on failure."""
+def _allowed_evidence_file(path: Path) -> bool:
     try:
-        text = path.read_text(encoding="utf-8")
-        return json.loads(text)
-    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        path.resolve().relative_to(REPOS_DIR.resolve())
+        return (
+            not path.is_symlink()
+            and path.is_file()
+            and path.stat().st_size < MAX_EVIDENCE_BYTES
+        )
+    except (ValueError, OSError, RuntimeError):
+        return False
+
+
+def _safe_read_json(path: Path) -> dict[str, Any] | list | None:
+    """Read only contained evidence, with an enforced read-time byte limit."""
+    if not _allowed_evidence_file(path):
         return None
+    try:
+        with path.open("rb") as stream:
+            content = stream.read(MAX_EVIDENCE_BYTES)
+        if len(content) >= MAX_EVIDENCE_BYTES:
+            return None
+        return json.loads(content.decode("utf-8"))
+    except (
+        json.JSONDecodeError,
+        OSError,
+        UnicodeDecodeError,
+        RecursionError,
+        ValueError,
+    ):
+        return None
+
+
+def _is_metric(value: Any) -> bool:
+    return type(value) is int or (type(value) is float and math.isfinite(value))
 
 
 def _extract_metrics(data: Any) -> dict[str, Any]:
@@ -244,14 +293,14 @@ def _extract_metrics(data: Any) -> dict[str, Any]:
     ]
 
     for key in metric_keys:
-        if key in data:
+        if key in data and _is_metric(data[key]):
             metrics[key] = data[key]
 
     # Check nested "metrics" or "results" keys
     for nested_key in ("metrics", "results", "summary", "stats"):
         if nested_key in data and isinstance(data[nested_key], dict):
             for key in metric_keys:
-                if key in data[nested_key]:
+                if key in data[nested_key] and _is_metric(data[nested_key][key]):
                     metrics[key] = data[nested_key][key]
 
     return metrics
@@ -431,7 +480,7 @@ if __name__ == "__main__":
     import uvicorn
 
     if not API_KEY:
-        print("\n  WARNING: DASHBOARD_API_KEY not set. API endpoints will return 500.")
+        print("\n  WARNING: DASHBOARD_API_KEY not set. API endpoints will return 503.")
         print("  Set it:  export DASHBOARD_API_KEY=replace-with-a-random-secret-at-least-32-characters
 
     print("\n  ML Security Dashboard Hub -> http://localhost:8080")

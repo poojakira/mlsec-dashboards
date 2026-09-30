@@ -208,7 +208,7 @@ function renderFindings(findings) {
     <div class="finding-card">
       <div class="finding-header">
         <span class="finding-name">${escHtml(f.name || f.finding || f.rule_id || 'Finding')}</span>
-        <span class="badge badge-${(f.severity||'info').toLowerCase()}">${f.severity || 'INFO'}</span>
+        <span class="badge badge-${(['CRITICAL','HIGH','MEDIUM','LOW','INFO'].includes(f.severity) ? f.severity : 'INFO').toLowerCase()}">${escHtml(f.severity || 'INFO')}</span>
       </div>
       <div class="finding-detail">${escHtml(f.description || f.detail || '')}</div>
       <div class="finding-meta">${f.file ? 'File: ' + escHtml(f.file) : ''} ${f.cve ? '· ' + escHtml(f.cve) : ''}</div>

@@ -186,9 +186,10 @@ class TestExtractMetrics:
 
 
 class TestSafeReadJson:
-    def test_reads_valid_json(self, tmp_path):
+    def test_reads_valid_json(self, tmp_path, monkeypatch):
         from dashboard_server import _safe_read_json
 
+        monkeypatch.setattr("dashboard_server.REPOS_DIR", tmp_path)
         f = tmp_path / "test.json"
         f.write_text('{"key": "value"}', encoding="utf-8")
         result = _safe_read_json(f)
@@ -294,6 +295,7 @@ class TestMetricAggregationSafety:
         assert "avg_fp_rate" not in summary
         assert summary["evidence_documents_with_metrics"] == 2
 
+
 class TestSecurityBoundaryRegression:
     def test_rate_limit_budget_is_enforced_per_identity(self, monkeypatch):
         import dashboard_server
@@ -321,3 +323,93 @@ class TestSecurityBoundaryRegression:
 
         assert "*" not in dashboard_server.ALLOWED_ORIGINS
 
+
+def test_rotating_invalid_keys_cannot_bypass_limit(client, monkeypatch):
+    import dashboard_server
+
+    monkeypatch.setattr(dashboard_server, "RATE_LIMIT_RPM", 2)
+    dashboard_server._rate_windows.clear()
+    try:
+        assert (
+            client.get("/api/status", headers={"X-API-Key": "first"}).status_code == 401
+        )
+        assert (
+            client.get("/api/status", headers={"X-API-Key": "second"}).status_code
+            == 401
+        )
+        assert (
+            client.get("/api/status", headers={"X-API-Key": "third"}).status_code == 429
+        )
+    finally:
+        dashboard_server._rate_windows.clear()
+
+
+def test_rate_table_is_bounded_and_expires(monkeypatch):
+    import dashboard_server
+
+    dashboard_server._rate_windows.clear()
+    monkeypatch.setattr(dashboard_server, "MAX_RATE_IDENTITIES", 2)
+    monkeypatch.setattr(dashboard_server.time, "monotonic", lambda: 100.0)
+    try:
+        assert dashboard_server._consume_rate_limit("a")
+        assert dashboard_server._consume_rate_limit("b")
+        assert not dashboard_server._consume_rate_limit("c")
+        monkeypatch.setattr(dashboard_server.time, "monotonic", lambda: 161.0)
+        assert dashboard_server._consume_rate_limit("c")
+        assert len(dashboard_server._rate_windows) == 1
+    finally:
+        dashboard_server._rate_windows.clear()
+
+
+def test_non_ascii_key_is_rejected_without_500():
+    import asyncio
+
+    from fastapi import HTTPException
+
+    from dashboard_server import verify_api_key
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(verify_api_key("\u00e9"))
+    assert exc.value.status_code == 401
+
+
+def test_evidence_symlinks_and_external_reads_are_rejected(tmp_path, monkeypatch):
+    import dashboard_server
+
+    root = tmp_path / "root"
+    results = root / "sample" / "results"
+    results.mkdir(parents=True)
+    outside = tmp_path / "private.json"
+    outside.write_text('{"test_count": 10}')
+    (results / "linked.json").symlink_to(outside)
+    (results / "directory").symlink_to(tmp_path, target_is_directory=True)
+    monkeypatch.setattr(dashboard_server, "REPOS_DIR", root)
+    assert dashboard_server._find_evidence_files("sample") == []
+    assert dashboard_server._safe_read_json(outside) is None
+
+
+def test_evidence_read_limit_and_discovery_count(tmp_path, monkeypatch):
+    import dashboard_server
+
+    monkeypatch.setattr(dashboard_server, "REPOS_DIR", tmp_path)
+    monkeypatch.setattr(dashboard_server, "MAX_EVIDENCE_BYTES", 32)
+    monkeypatch.setattr(dashboard_server, "MAX_EVIDENCE_FILES", 2)
+    results = tmp_path / "sample" / "results"
+    results.mkdir(parents=True)
+    for i in range(4):
+        (results / f"{i}.json").write_text('{"test_count": 1}')
+    big = results / "big.json"
+    big.write_text(" " * 32)
+    assert dashboard_server._safe_read_json(big) is None
+    assert len(dashboard_server._find_evidence_files("sample")) == 2
+
+
+def test_metric_values_cannot_include_secrets_or_nonfinite_numbers():
+    from dashboard_server import _extract_metrics
+
+    assert (
+        _extract_metrics(
+            {"accuracy": "sensitive data", "f1": float("nan"), "test_count": True}
+        )
+        == {}
+    )

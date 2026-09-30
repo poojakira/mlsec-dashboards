@@ -20,19 +20,19 @@ pip install -r requirements.txt
 
 ## Start the server
 
-`DASHBOARD_API_KEY` is **required**. Without it, `/api/*` endpoints return HTTP 500
-("Server misconfigured") — this is intentional fail-closed behavior so the API is
+`DASHBOARD_API_KEY` is **required**. Without it, `/api/*` endpoints return HTTP 503
+("Dashboard authentication unavailable") — this is intentional fail-closed behavior so the API is
 never silently unauthenticated.
 
 ```bash
 # bash
-export DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+export DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")import secrets; print(secrets.token_urlsafe(32))')"
 python dashboard_server.py
 ```
 
 ```powershell
 # PowerShell
-$env:DASHBOARD_API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+$env:DASHBOARD_API_KEY = python -c "import secrets; print(secrets.token_urlsafe(32))"
 python dashboard_server.py
 ```
 
@@ -49,11 +49,11 @@ curl http://localhost:8080/health
 curl -i http://localhost:8080/
 
 # Repo evidence discovery — requires the API key
-curl -H "X-API-Key: your-secret-key" http://localhost:8080/api/status
+curl -H "X-API-Key: $DASHBOARD_API_KEY" http://localhost:8080/api/status
 # {"repos":{"aws-agent-identity-guard":{"exists":true,"evidence_file_count":1,...},...}}
 
 # Aggregated metrics — requires the API key
-curl -H "X-API-Key: your-secret-key" http://localhost:8080/api/metrics
+curl -H "X-API-Key: $DASHBOARD_API_KEY" http://localhost:8080/api/metrics
 # {"repos":{...},"total_repos_with_evidence":N,"ts":...}
 
 # Wrong / missing key -> HTTP 401
@@ -62,13 +62,13 @@ curl -i http://localhost:8080/api/status
 ```
 
 On Windows PowerShell, `curl` is an alias for `Invoke-WebRequest`; use
-`Invoke-WebRequest -Uri ... -Headers @{"X-API-Key"="your-secret-key"}` instead.
+`Invoke-WebRequest -Uri ... -Headers @{"X-API-Key"=$env:DASHBOARD_API_KEY}` instead.
 
 ## Run the tests
 
 ```bash
 pytest tests/ -q
-# 27 passed
+# 36 passed (2026-09-30 local review)
 ```
 
 Covers: unauthenticated health check, API-key auth (accept/reject/missing-env→500),
@@ -87,8 +87,15 @@ unreadable file → clean 500), and the 10 MB evidence-file size cap.
 
 ## Troubleshooting
 
-- **`/api/*` returns 500 "misconfigured"**: `DASHBOARD_API_KEY` is not set. Set it and restart.
+- **`/api/*` returns 503 "Dashboard authentication unavailable"**: `DASHBOARD_API_KEY` is not set. Set it and restart.
 - **`/api/*` returns 401**: Missing or wrong `X-API-Key` header.
 - **Empty metrics**: Sibling repos are not cloned next to this repo, or they contain no JSON evidence.
 - **Port in use**: `uvicorn dashboard_server:app --port 8081`.
 - **Import errors**: Confirm the venv is activated and `pip install -r requirements.txt` ran.
+
+
+## Local environment file and rotation
+
+Copy `.env.example` to the ignored `.env` file, populate your own generated key, and start with `uvicorn dashboard_server:app --env-file .env --host 127.0.0.1 --port 8080`. Do not copy credentials from repository history. The Python entrypoint does not read `.env` automatically. Only placeholder/empty templates are safe to commit.
+
+If the historical README key at `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` was used, replace `DASHBOARD_API_KEY` in each deployment's environment or secret store and restart all instances. GitHub cannot revoke a locally configured application key; history removal does not disable deployed copies. No provider key was validated or revoked by this review.
