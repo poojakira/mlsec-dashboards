@@ -84,7 +84,9 @@ class TestAuthentication:
             try:
                 response = client.get("/api/status", headers={"X-API-Key": "anything"})
                 assert response.status_code == 503
-                assert (\n                    response.json()["detail"] == "Dashboard authentication unavailable"\n                )
+                assert (
+                    response.json()["detail"] == "Dashboard authentication unavailable"
+                )
             finally:
                 dashboard_server.API_KEY = original_key
 
