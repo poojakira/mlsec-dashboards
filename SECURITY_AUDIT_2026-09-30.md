@@ -47,3 +47,12 @@ Original revision: `4761710551f0ad5708c3302dc649d68a8fc4b122`. Fixed invalid-key
 Reachable-history scanner triage: ten curl-header detections are documented placeholder constants. A historical `DASHBOARD_API_KEY` assignment in `README.md` at commit `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` remains a potential exposed local application key: it is not a cloud-provider key and was not tested against any endpoint. If ever deployed, replace it in the deployment secret store; no provider revocation or history rewrite was performed. The only credential-shaped filename observed in history was a vendored certifi public CA bundle, not a private key.
 
 The isolated dependency audit initially identified advisories in the audit environment's old pip (25.0.1), not dashboard runtime dependencies. After upgrading isolated pip to 26.2.1, `pip-audit --progress-spinner=off` reported no known vulnerabilities.
+
+<!-- hardening-followup-20260930:start -->
+## Follow-up hardening — 2026-09-30
+
+- The historical dashboard application-key-like value previously noted in this audit is now explicitly rejected by the runtime using a SHA-256 fingerprint. The historical plaintext was not recommitted. A regression test verifies the deny behavior with synthetic values.
+- This is an application-owned dashboard key, not a cloud-provider credential with a central revocation API. Any deployment that ever used the historical value must generate a fresh key, replace the deployment secret, and restart affected instances.
+- GitHub Actions workflow-policy validation was strengthened on `main`, including nested action-path SHA validation and rejection of dangerous workflow triggers.
+- The dashboard remains a single shared trust domain; tenant/per-repository authorization and multi-worker distributed rate limiting remain architecture/deployment limits rather than claimed controls.
+<!-- hardening-followup-20260930:end -->
