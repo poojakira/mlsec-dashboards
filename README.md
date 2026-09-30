@@ -316,3 +316,10 @@ Dashboard results are reported with their scope and limitations rather than as h
 - **Security note:** The dashboards are presentation/inspection surfaces; displayed security findings must remain traceable to repository evidence.
 - **Evidence boundary:** This update records repository and GitHub Actions evidence observed during the pass. It is not a claim of independent penetration testing, production deployment, or zero residual risk.
 <!-- repo-verification:end -->
+
+## Verification checkpoint — 2026-09-30
+
+- **Snapshot commit:** `e586bdf32ccc58fd9f04b5600f61b32c82284aca`
+- **Status:** VERIFIED GREEN
+- **Evidence:** Documentation Integrity, Security Hygiene, Production Gate, CI, and GitHub Pages deployment all completed successfully on the current main revision.
+- This checkpoint is intentionally date-bounded. It does not claim zero vulnerabilities or universal production readiness.
