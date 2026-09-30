@@ -26,3 +26,17 @@ Thumbs.db
 # Temp files
 *.log
 server_out*.txt
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.p12
+*.pfx
+*.key
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
