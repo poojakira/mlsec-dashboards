@@ -37,3 +37,13 @@ Password reset and SQL tenant isolation unless accounts/data storage are added.
 - **Status:** VERIFIED GREEN
 - **Evidence:** Documentation Integrity, Security Hygiene, Production Gate, CI, and GitHub Pages deployment all completed successfully on the current main revision.
 - This checkpoint is intentionally date-bounded. It does not claim zero vulnerabilities or universal production readiness.
+
+
+## Follow-up local boundary review
+
+Original revision: `4761710551f0ad5708c3302dc649d68a8fc4b122`. Fixed invalid-key rotation rate-limit bypass, unbounded inactive identity retention, symlink evidence escapes, read-time size enforcement, non-ASCII key comparison errors, disclosure of nonnumeric metric content, and unescaped legacy HF severity markup. Added regression tests; 36 pass locally. Read-only checkout workflows no longer persist credentials. Authentication grants shared read access, without tenant/per-repository authorization. No upload endpoint exists. Multi-worker rate limiting, hostile local filesystem writers, TLS, and the separate legacy localhost service remain outside this implementation's guarantees.
+
+
+Reachable-history scanner triage: ten curl-header detections are documented placeholder constants. A historical `DASHBOARD_API_KEY` assignment in `README.md` at commit `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` remains a potential exposed local application key: it is not a cloud-provider key and was not tested against any endpoint. If ever deployed, replace it in the deployment secret store; no provider revocation or history rewrite was performed. The only credential-shaped filename observed in history was a vendored certifi public CA bundle, not a private key.
+
+The isolated dependency audit initially identified advisories in the audit environment's old pip (25.0.1), not dashboard runtime dependencies. After upgrading isolated pip to 26.2.1, `pip-audit --progress-spinner=off` reported no known vulnerabilities.
