@@ -1,5 +1,6 @@
 """Tests for dashboard_server.py — verifies authentication, health check, and metrics."""
 
+import hashlib
 import os
 from unittest.mock import patch
 
@@ -72,6 +73,15 @@ class TestAuthentication:
     def test_api_metrics_accepts_correct_key(self, client, api_headers):
         response = client.get("/api/metrics", headers=api_headers)
         assert response.status_code == 200
+
+    def test_compromised_key_fingerprint_is_rejected(self):
+        import dashboard_server
+
+        known_bad = "known-bad-test-key"
+        fingerprint = hashlib.sha256(known_bad.encode("utf-8")).hexdigest()
+        with patch.object(dashboard_server, "COMPROMISED_API_KEY_SHA256", fingerprint):
+            assert dashboard_server._is_compromised_api_key(known_bad)
+            assert not dashboard_server._is_compromised_api_key("fresh-test-key")
 
     def test_empty_api_key_returns_503(self, client):
         """If DASHBOARD_API_KEY is empty, authentication fails closed with 503."""
