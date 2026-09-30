@@ -61,7 +61,7 @@ uvicorn dashboard_server:app --host 127.0.0.1 --port 8090
 ```
 
 **`DASHBOARD_API_KEY` not set:** the server still starts, but every `/api/*` call returns
-HTTP 500 (`Server misconfigured: DASHBOARD_API_KEY environment variable not set.`). On
+HTTP 503 (`Dashboard authentication unavailable`). On
 startup with no key set, it prints a `WARNING: DASHBOARD_API_KEY not set` banner. Fix:
 ```bash
 export DASHBOARD_API_KEY=replace-with-a-random-secret-at-least-32-characters        # Windows: $env:DASHBOARD_API_KEY="..."
@@ -96,7 +96,7 @@ Send the correct key:
 curl -s http://localhost:8080/api/status -H "X-API-Key: your-secret-key"
 ```
 - Confirm the value matches the `DASHBOARD_API_KEY` the server was started with.
-- If you get HTTP 500 instead of 401, `DASHBOARD_API_KEY` was never set — see
+- If you get HTTP 503 instead of 401, `DASHBOARD_API_KEY` is not configured — see
   [Server Won't Start](#1-server-wont-start).
 - Note `/health` and `/` require no key; only `/api/*` do.
 
@@ -155,15 +155,12 @@ curl -s http://localhost:8080/api/status -H "X-API-Key: your-secret-key"
 - Browser console shows a CORS policy error when a page calls the API.
 
 ### Cause
-CORS is intentionally restricted to `http://localhost:8080`, `http://127.0.0.1:8080`,
-`http://localhost:3000`, and `http://127.0.0.1:3000`, and only allows the `GET` method
-and `Authorization` / `X-API-Key` headers. Requests from any other origin are blocked.
+In development, CORS defaults to the checked-in localhost origins. In production, no cross-origin access is enabled unless the operator supplies explicit `http(s)` origins through `DASHBOARD_ALLOWED_ORIGINS`. Only `GET` and the configured auth headers are allowed.
 
 ### Fix
 - Load the dashboard from one of the allowed localhost origins (this is a local dev tool,
   not a public service).
-- If you genuinely need another local origin, add it to the `allow_origins` list in
-  `dashboard_server.py` and restart the server.
+- If you genuinely need another local origin, set `DASHBOARD_ALLOWED_ORIGINS` to the explicit origin(s) you own and restart the server.
 
 ---
 
