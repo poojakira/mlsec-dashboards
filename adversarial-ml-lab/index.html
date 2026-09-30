@@ -128,7 +128,14 @@ document.getElementById('run-adv-btn').addEventListener('click', () => {
   btn.disabled = true; btn.textContent = 'Running…';
   const log = document.getElementById('adv-log');
   log.style.display = 'block'; log.innerHTML = '';
-  const addLine = t => { log.innerHTML += `<p style="margin:0;padding:1px 0">${t}</p>`; log.scrollTop = log.scrollHeight; };
+  const addLine = t => {
+  const p = document.createElement('p');
+  p.style.margin = '0';
+  p.style.padding = '1px 0';
+  p.textContent = String(t);
+  log.appendChild(p);
+  log.scrollTop = log.scrollHeight;
+};
 
   const es = new EventSource(`${PROXY}/sse/adv-eval?attack=${attack}`);
   es.addEventListener('started', () => addLine(`▶ adv eval --attack ${attack}`));
