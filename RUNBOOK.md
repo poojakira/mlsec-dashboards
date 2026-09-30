@@ -71,7 +71,7 @@ pytest tests/ -q
 # 36 passed (2026-09-30 local review)
 ```
 
-Covers: unauthenticated health check, API-key auth (accept/reject/missing-env→500),
+Covers: unauthenticated health check, API-key auth (accept/reject/missing-env→503),
 `/api/status` and `/api/metrics` shape, metric extraction (flat + nested), safe JSON
 parsing (valid/invalid/missing), index-serving fallbacks (missing file → fallback,
 unreadable file → clean 500), and the 10 MB evidence-file size cap.
