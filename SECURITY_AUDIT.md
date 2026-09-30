@@ -7,9 +7,9 @@
 
 | ID | Severity | Finding | Status |
 |---|---|---|---|
-| DASH-001 | Medium | Authenticated evidence aggregation endpoints have no request-rate limiter despite potentially reading many JSON evidence files per request. | Open |
-| DASH-002 | Medium | Production CORS is hardcoded to localhost rather than an explicit owned-domain configuration. | Open |
-| DASH-003 | Low | Repository names from operator configuration are joined under the evidence root without explicit path-confinement validation. | Open |
+| DASH-001 | Medium | Authenticated `/api/*` requests are now bounded by a per-peer/API-key rate limiter before evidence aggregation work. | Fixed |
+| DASH-002 | Medium | Production now defaults to same-origin browser access and accepts only explicitly configured, validated `DASHBOARD_ALLOWED_ORIGINS`; wildcard origins are rejected. | Fixed |
+| DASH-003 | Low | Configured repository names are syntax-validated and resolved paths are confined beneath the configured evidence root before files are read. | Fixed |
 | DASH-004 | Info | Individual evidence files are capped at 10 MB and JSON parse failures are handled safely. | Verified |
 
 ## Existing controls verified
