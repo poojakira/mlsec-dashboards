@@ -18,6 +18,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -69,6 +70,9 @@ SIBLING_REPOS = (
     if _configured_repositories
     else _DEFAULT_REPOSITORIES
 )
+_REPO_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,100}$")
+if any(not _REPO_NAME.fullmatch(name) for name in SIBLING_REPOS):
+    raise RuntimeError("DASHBOARD_REPOSITORIES contains an invalid repository name")
 
 # Common evidence file paths to search within each repo
 EVIDENCE_PATHS = [
@@ -152,7 +156,11 @@ async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
 
 def _find_evidence_files(repo_name: str) -> list[Path]:
     """Find JSON evidence files in a sibling repo."""
-    repo_path = REPOS_DIR / repo_name
+    repo_path = (REPOS_DIR / repo_name).resolve()
+    try:
+        repo_path.relative_to(REPOS_DIR)
+    except ValueError:
+        return []
     if not repo_path.is_dir():
         return []
 
