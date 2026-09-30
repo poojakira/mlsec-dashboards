@@ -106,7 +106,7 @@ async def _security_boundary(request: Request, call_next):
     if request.url.path.startswith("/api/"):
         peer = request.client.host if request.client else "unknown"
         supplied = request.headers.get("X-API-Key", "")
-        identity = hashlib.sha256((supplied + "\0" + peer).encode("utf-8")).hexdigest()[:32]
+        identity = hashlib.sha256((supplied + "\0" + peer).encode()).hexdigest()[:32]
         if not _consume_rate_limit(identity):
             return JSONResponse(
                 status_code=429,
