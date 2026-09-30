@@ -74,6 +74,30 @@ _REPO_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,100}$")
 if any(not _REPO_NAME.fullmatch(name) for name in SIBLING_REPOS):
     raise RuntimeError("DASHBOARD_REPOSITORIES contains an invalid repository name")
 
+_configured_origins = [
+    item.strip()
+    for item in os.environ.get("DASHBOARD_ALLOWED_ORIGINS", "").split(",")
+    if item.strip()
+]
+for origin in _configured_origins:
+    if origin == "*" or not re.fullmatch(r"https?://[^/]+(?::\d+)?", origin):
+        raise RuntimeError(
+            "DASHBOARD_ALLOWED_ORIGINS must contain explicit http(s) origins without paths"
+        )
+
+if _configured_origins:
+    ALLOWED_ORIGINS = _configured_origins
+elif ENVIRONMENT == "production":
+    # No CORS headers means browser access remains same-origin only.
+    ALLOWED_ORIGINS = []
+else:
+    ALLOWED_ORIGINS = [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
 # Common evidence file paths to search within each repo
 EVIDENCE_PATHS = [
     "evidence",
@@ -121,15 +145,11 @@ async def _security_boundary(request: Request, call_next):
     return response
 
 
-# CORS restricted to localhost only
+# Same-origin by default in production. Operators may explicitly allow
+# owned browser origins with DASHBOARD_ALLOWED_ORIGINS.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET"],
     allow_headers=["Authorization", "X-API-Key"],
 )
