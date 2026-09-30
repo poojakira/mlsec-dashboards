@@ -321,7 +321,7 @@ Dashboard results are reported with their scope and limitations rather than as h
 
 - **Snapshot commit:** `e586bdf32ccc58fd9f04b5600f61b32c82284aca`
 - **Status:** VERIFIED GREEN
-- **Evidence:** Documentation Integrity, Security Hygiene, Production Gate, CI, and GitHub Pages deployment all completed successfully on the current main revision.
+- **Evidence:** Documentation Integrity, Security Hygiene, Production Gate, CI, and GitHub Pages deployment all completed successfully for the cited snapshot revision.
 - This checkpoint is intentionally date-bounded. It does not claim zero vulnerabilities or universal production readiness.
 
 
