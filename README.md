@@ -350,3 +350,13 @@ Verified locally: 36 pytest tests, Ruff lint/format, and a dated dependency advi
 Each operator generates their own `DASHBOARD_API_KEY`; no owner credential or shared working key is distributed. You can copy the empty `.env.example` to `.env`, fill the key locally, and run `uvicorn dashboard_server:app --env-file .env --host 127.0.0.1 --port 8080`. The direct `python dashboard_server.py` command uses inherited environment variables and does not automatically load `.env`. Real `.env` and `.env.*` files are ignored; only empty/example templates may be committed. Production additionally requires a key of at least 32 characters and your own configured evidence root.
 
 A historical README at `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` contains a potential exposed dashboard application key. If you used it, generate a new key, replace the deployment environment/secret-store value, and restart every instance using it; update your clients through a private channel. GitHub cannot centrally revoke this application key. Its acceptance is controlled by each dashboard deployment, and deleting a Git history entry alone would not revoke it.
+
+<!-- security-local-config:start -->
+## Secrets and local configuration
+
+- Never commit real API keys, access tokens, passwords, cloud credentials, private keys, or a populated `.env` file.
+- Local `.env` and `.env.*` files are ignored by Git. Only safe templates such as `.env.example` or `.env.sample` may be committed, and they must contain placeholder or empty values only.
+- If an integration needs credentials, create your own local `.env` file (or use your shell/secret manager) and supply **your own** API key. In GitHub Actions, use repository/environment secrets rather than hard-coding values in workflow YAML.
+- Do not copy or reuse any credential that appears in repository history, examples, tests, screenshots, logs, or documentation. Test strings are not intended to be usable credentials.
+- If a real credential is ever committed, **revoke or rotate it at the credential provider first**, then remove it from the current tree and reachable Git history. Deleting a key from GitHub does not revoke it.
+<!-- security-local-config:end -->
