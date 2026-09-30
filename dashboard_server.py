@@ -38,7 +38,9 @@ from fastapi.staticfiles import StaticFiles
 API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
 # SHA-256 fingerprint of a dashboard key value that appeared in public Git history.
 # Keep only the fingerprint here so the historical plaintext is not recommitted.
-COMPROMISED_API_KEY_SHA256 = "6d51b0ded27991c258a110849c4f6140201ff4af1842853cf80292dda04ece26"
+COMPROMISED_API_KEY_SHA256 = (
+    "6d51b0ded27991c258a110849c4f6140201ff4af1842853cf80292dda04ece26"
+)
 
 
 def _is_compromised_api_key(value: str) -> bool:
