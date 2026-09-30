@@ -120,6 +120,7 @@ async def _security_boundary(request: Request, call_next):
     response.headers["Cache-Control"] = "no-store"
     return response
 
+
 # CORS restricted to localhost only
 app.add_middleware(
     CORSMiddleware,
@@ -143,7 +144,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
     """Validate API key from X-API-Key header."""
     if not API_KEY:
-        raise HTTPException(status_code=503, detail="Dashboard authentication unavailable")
+        raise HTTPException(\n            status_code=503, detail="Dashboard authentication unavailable"\n        )
     if not api_key or not hmac.compare_digest(api_key, API_KEY):
         raise HTTPException(status_code=401, detail="Invalid or missing API key.")
     return api_key
