@@ -20,3 +20,13 @@ Dashboard HTTP server plus static dashboards.
 
 ## Not applicable
 Password reset and SQL tenant isolation unless accounts/data storage are added.
+
+<!-- repo-verification:start -->
+## Verification update — 2026-09-30
+
+- **Scope:** Account-wide `poojakira` repository pass covering source/configuration, CI/release workflows, security-hygiene gates, dependency/SAST controls, and documentation consistency.
+- **Remediation:** Fixed two Ruff-formatting mismatches, corrected the accidental literal-newline syntax regression, and re-ran all repository gates.
+- **Verification state:** CI, Production Gate, Security Hygiene, Documentation Integrity, and GitHub Pages deployment all completed successfully after the final fix.
+- **Security note:** The dashboards are presentation/inspection surfaces; displayed security findings must remain traceable to repository evidence.
+- **Evidence boundary:** This update records repository and GitHub Actions evidence observed during the pass. It is not a claim of independent penetration testing, production deployment, or zero residual risk.
+<!-- repo-verification:end -->
