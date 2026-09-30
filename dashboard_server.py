@@ -14,6 +14,7 @@ Environment Variables:
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 import json
 import os
@@ -21,9 +22,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 
@@ -35,6 +36,10 @@ API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
 ENVIRONMENT = os.environ.get("DASHBOARD_ENV", "development").strip().lower()
 if ENVIRONMENT == "production" and len(API_KEY) < 32:
     raise RuntimeError("DASHBOARD_API_KEY must be at least 32 characters in production")
+RATE_LIMIT_RPM = int(os.environ.get("DASHBOARD_RATE_LIMIT_RPM", "180"))
+if RATE_LIMIT_RPM < 1 or RATE_LIMIT_RPM > 10000:
+    raise RuntimeError("DASHBOARD_RATE_LIMIT_RPM must be between 1 and 10000")
+_rate_windows: dict[str, list[float]] = {}
 BASE_DIR = Path(__file__).resolve().parent
 _configured_evidence_root = os.environ.get("DASHBOARD_EVIDENCE_ROOT", "").strip()
 REPOS_DIR = (
@@ -80,6 +85,37 @@ app = FastAPI(
     description="Unified dashboard for ML security portfolio tool metrics.",
 )
 
+
+def _consume_rate_limit(identity: str) -> bool:
+    now = time.time()
+    cutoff = now - 60.0
+    bucket = _rate_windows.setdefault(identity, [])
+    bucket[:] = [ts for ts in bucket if ts > cutoff]
+    if len(bucket) >= RATE_LIMIT_RPM:
+        return False
+    bucket.append(now)
+    return True
+
+
+@app.middleware("http")
+async def _security_boundary(request: Request, call_next):
+    if request.url.path.startswith("/api/"):
+        peer = request.client.host if request.client else "unknown"
+        supplied = request.headers.get("X-API-Key", "")
+        identity = hashlib.sha256((supplied + "\0" + peer).encode("utf-8")).hexdigest()[:32]
+        if not _consume_rate_limit(identity):
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Rate limit exceeded"},
+                headers={"Retry-After": "60"},
+            )
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
 # CORS restricted to localhost only
 app.add_middleware(
     CORSMiddleware,
@@ -103,10 +139,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
     """Validate API key from X-API-Key header."""
     if not API_KEY:
-        raise HTTPException(
-            status_code=500,
-            detail="Server misconfigured: DASHBOARD_API_KEY environment variable not set.",
-        )
+        raise HTTPException(status_code=503, detail="Dashboard authentication unavailable")
     if not api_key or not hmac.compare_digest(api_key, API_KEY):
         raise HTTPException(status_code=401, detail="Invalid or missing API key.")
     return api_key
