@@ -236,7 +236,13 @@ function log(msg, cls = 'log-info') {
   const ts = new Date().toLocaleTimeString();
   const p = document.createElement('p');
   p.className = 'log-line';
-  p.innerHTML = `<span class="log-ts">${ts}</span><span class="${cls}">${msg}</span>`;
+  const tsSpan = document.createElement('span');
+  tsSpan.className = 'log-ts';
+  tsSpan.textContent = ts;
+  const msgSpan = document.createElement('span');
+  msgSpan.className = cls;
+  msgSpan.textContent = String(msg);
+  p.append(tsSpan, msgSpan);
   log.appendChild(p);
   if (log.children.length > MAX_LOG) log.removeChild(log.firstChild);
   log.scrollTop = log.scrollHeight;
