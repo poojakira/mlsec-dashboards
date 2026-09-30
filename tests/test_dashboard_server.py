@@ -73,8 +73,8 @@ class TestAuthentication:
         response = client.get("/api/metrics", headers=api_headers)
         assert response.status_code == 200
 
-    def test_empty_api_key_returns_500(self, client):
-        """If DASHBOARD_API_KEY env var is empty, server returns 500."""
+    def test_empty_api_key_returns_503(self, client):
+        """If DASHBOARD_API_KEY is empty, authentication fails closed with 503."""
         with patch.dict(os.environ, {"DASHBOARD_API_KEY": ""}):
             # Need to reload the module to pick up the new env var
             import dashboard_server
@@ -83,7 +83,7 @@ class TestAuthentication:
             dashboard_server.API_KEY = ""
             try:
                 response = client.get("/api/status", headers={"X-API-Key": "anything"})
-                assert response.status_code == 500
+                assert response.status_code == 503
                 assert "misconfigured" in response.json()["detail"].lower()
             finally:
                 dashboard_server.API_KEY = original_key
