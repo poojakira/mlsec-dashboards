@@ -144,7 +144,9 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 async def verify_api_key(api_key: str | None = Depends(api_key_header)) -> str:
     """Validate API key from X-API-Key header."""
     if not API_KEY:
-        raise HTTPException(\n            status_code=503, detail="Dashboard authentication unavailable"\n        )
+        raise HTTPException(
+            status_code=503, detail="Dashboard authentication unavailable"
+        )
     if not api_key or not hmac.compare_digest(api_key, API_KEY):
         raise HTTPException(status_code=401, detail="Invalid or missing API key.")
     return api_key
