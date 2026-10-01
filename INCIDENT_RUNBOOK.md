@@ -93,7 +93,7 @@ The `X-API-Key` request header is missing or does not match the server's
 ### Fix
 Send the correct key:
 ```bash
-curl -s http://localhost:8080/api/status -H "X-API-Key: your-secret-key"
+curl -s http://localhost:8080/api/status -H "X-API-Key: ${DASHBOARD_API_KEY}"
 ```
 - Confirm the value matches the `DASHBOARD_API_KEY` the server was started with.
 - If you get HTTP 503 instead of 401, `DASHBOARD_API_KEY` is not configured — see
@@ -117,7 +117,7 @@ missing, or its evidence JSON has not been regenerated, results are empty or sta
 ### Diagnosis
 ```bash
 # See which sibling repos the server can find and how many evidence files each has
-curl -s http://localhost:8080/api/status -H "X-API-Key: your-secret-key"
+curl -s http://localhost:8080/api/status -H "X-API-Key: ${DASHBOARD_API_KEY}"
 ```
 
 ### Fix

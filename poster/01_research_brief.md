@@ -3,7 +3,7 @@
 > Evidence status: This is a dated repository snapshot at the commit identified below. `VERIFIED_AT_SNAPSHOT` means verified for that commit and environment; it does not assert the same result on the latest `main`. Compare newer claims with the repository evidence before reuse.
 
 ## Repository
-`github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • HEAD 30f729d • verified 2026-09-26
+`github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • source snapshot b02a0fc • verified 2026-10-01
 
 ## Academic Project Title
 **Evidence-Centered Visualization for ML Security Engineering**
@@ -38,7 +38,7 @@ O4 — Show weak results explicitly
 
 ## Evidence at Poster Snapshot + Claim Ledger
 - **VERIFIED_AT_SNAPSHOT** — Aggregates evidence from 8 active ML security repos — README; dashboard_server.py discovers sibling evidence/*.json.
-- **VERIFIED_AT_SNAPSHOT** — 27 test functions — Counted def test_ in tests/ (HEAD 30f729d).
+- **VERIFIED_AT_SNAPSHOT** — 37 test functions — Counted `def test_` definitions in `tests/` at source snapshot b02a0fc; current README also records 37 passing pytest tests.
 - **VERIFIED_AT_SNAPSHOT** — Shows weak results explicitly (OOD F1 0.72, ROC-AUC 0.54) — README states weak-alongside-strong design; numbers sourced from sibling evidence files.
 - **VERIFIED_AT_SNAPSHOT** — Token-authed REST API + static HTML — README features; dashboard_server.py.
 - **UNSUPPORTED (disclaimed)** — Live SOC monitoring / real-time alerting — README: static evidence snapshots, not live monitoring. Not claimed.
