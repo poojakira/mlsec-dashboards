@@ -26,7 +26,7 @@ Reproduced on current `main` (Python 3.12).
 
 | Metric | Current verified result |
 |---|---:|
-| Tests | 36 passing (2026-09-30 local follow-up) |
+| Tests | 37 passing (current main CI) |
 | Coverage | auth, health, metrics, dashboard rendering, evidence loading |
 | Source repos aggregated | 8 active ML security repos |
 | Auth | token-based on API routes |
@@ -258,7 +258,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 | HTTPS | Not included | Intended for local development |
 | Monitoring/alerting | None | No health check integrations |
 | CI/CD | Present | GitHub Actions directory exists |
-| Test coverage | Good | 36 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap |
+| Test coverage | Good | 37 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit and evidence-boundary regressions |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
 **Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
@@ -342,7 +342,7 @@ The API request budget is keyed to the connection peer, so rotating invalid keys
 
 Evidence storage must be operator-controlled and read-only to untrusted users. Symlink escapes and oversized reads are rejected, but the service is not a sandbox for a hostile local writer racing filesystem checks. Metrics containing strings, objects, booleans, or non-finite floats are ignored. The legacy HF renderer now escapes server-provided severity text and chooses CSS severity classes from a fixed allowlist.
 
-Verified locally: 36 pytest tests, Ruff lint/format, and a dated dependency advisory audit. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
+Current main CI: 37 pytest tests passed; Ruff lint/format and the blocking dependency audit also passed. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
 
 
 ### Your local dashboard secret
