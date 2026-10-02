@@ -1,0 +1,24 @@
+# Fingerprint-scoped historical triage only. Do not add broad path or rule exclusions.
+116e56b3d814f47077c336facf413b4bac40527d:RUNBOOK.md:curl-auth-header:165
+116e56b3d814f47077c336facf413b4bac40527d:RUNBOOK.md:curl-auth-header:83
+116e56b3d814f47077c336facf413b4bac40527d:RUNBOOK.md:curl-auth-header:92
+1d5cf67214c667e6cdfe95a6e0178821c6b957d5:README.md:curl-auth-header:37
+254292faccd7ca49d8992a10cde09fafa4dd2115:README.md:curl-auth-header:37
+86ebc0c04d70785839fff01afe6db7949ebbd519:INCIDENT_RUNBOOK.md:curl-auth-header:120
+86ebc0c04d70785839fff01afe6db7949ebbd519:INCIDENT_RUNBOOK.md:curl-auth-header:96
+907cf9288cb8dbe9cb57dcc708bbc2003978075a:RUNBOOK.md:curl-auth-header:45
+907cf9288cb8dbe9cb57dcc708bbc2003978075a:RUNBOOK.md:curl-auth-header:56
+a19a556c61937c1b3f2828d21b509fc56f25e3f3:dashboard_server.py:generic-api-key:41
+a9e9ac617872a9b860cab8a1001f864ffd1cd201:RUNBOOK.md:curl-auth-header:165
+a9e9ac617872a9b860cab8a1001f864ffd1cd201:RUNBOOK.md:curl-auth-header:83
+a9e9ac617872a9b860cab8a1001f864ffd1cd201:RUNBOOK.md:curl-auth-header:92
+aa687f5bcf8a92d55242c1e21e0a4eaaed500be8:README.md:generic-api-key:7
+ade107cad68e51c8c2886f8e4930eda6e2f7fa40:RUNBOOK.md:curl-auth-header:45
+ade107cad68e51c8c2886f8e4930eda6e2f7fa40:RUNBOOK.md:curl-auth-header:56
+b9c3d60611b4a509595afbb5e68a4ecabbaa1af6:README_LIVE.md:curl-auth-header:29
+b9c3d60611b4a509595afbb5e68a4ecabbaa1af6:README_LIVE.md:curl-auth-header:30
+cfd6bd9fb8aa44ae3f2c766d810404f7078e7a75:INCIDENT_RUNBOOK.md:curl-auth-header:120
+cfd6bd9fb8aa44ae3f2c766d810404f7078e7a75:INCIDENT_RUNBOOK.md:curl-auth-header:96
+dbcd0a197c957d06c50a5d74ca2bd28f5b400bff:README_LIVE.md:curl-auth-header:29
+dbcd0a197c957d06c50a5d74ca2bd28f5b400bff:README_LIVE.md:curl-auth-header:30
+e274d87f55800619bf994562673e05abb8055114:dashboard_server.py:generic-api-key:41
