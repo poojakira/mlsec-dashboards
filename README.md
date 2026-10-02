@@ -26,7 +26,7 @@ Reproduced on current `main` (Python 3.12).
 
 | Metric | Current verified result |
 |---|---:|
-| Tests | 37 passing (current main CI) |
+| Tests | 36 passing (current local verification) |
 | Coverage | auth, health, metrics, dashboard rendering, evidence loading |
 | Source repos aggregated | 8 active ML security repos |
 | Auth | token-based on API routes |
@@ -258,7 +258,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 | HTTPS | Not included | Intended for local development |
 | Monitoring/alerting | None | No health check integrations |
 | CI/CD | Present | GitHub Actions directory exists |
-| Test coverage | Good | 37 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit and evidence-boundary regressions |
+| Test coverage | Good | 36 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit and evidence-boundary regressions |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
 **Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
@@ -342,14 +342,14 @@ The API request budget is keyed to the connection peer, so rotating invalid keys
 
 Evidence storage must be operator-controlled and read-only to untrusted users. Symlink escapes and oversized reads are rejected, but the service is not a sandbox for a hostile local writer racing filesystem checks. Metrics containing strings, objects, booleans, or non-finite floats are ignored. The legacy HF renderer now escapes server-provided severity text and chooses CSS severity classes from a fixed allowlist.
 
-Current main CI: 37 pytest tests passed; Ruff lint/format and the blocking dependency audit also passed. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
+Current local verification: 36 pytest tests passed and the repository security-control scan passed. Hosted CI is manual-only; do not treat an older workflow run as evidence for this revision. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
 
 
 ### Your local dashboard secret
 
 Each operator generates their own `DASHBOARD_API_KEY`; no owner credential or shared working key is distributed. You can copy the empty `.env.example` to `.env`, fill the key locally, and run `uvicorn dashboard_server:app --env-file .env --host 127.0.0.1 --port 8080`. The direct `python dashboard_server.py` command uses inherited environment variables and does not automatically load `.env`. Real `.env` and `.env.*` files are ignored; only empty/example templates may be committed. Production additionally requires a key of at least 32 characters and your own configured evidence root.
 
-A historical README at `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` contains a potential exposed dashboard application key. The runtime now rejects that historical value by SHA-256 fingerprint, so it cannot be reused as `DASHBOARD_API_KEY`. If you used it, generate a new key, replace the deployment environment/secret-store value, and restart every instance using it; update your clients through a private channel. GitHub cannot centrally revoke this application key. Its acceptance is controlled by each dashboard deployment, and deleting a Git history entry alone would not revoke it.
+A pre-sanitization revision contained a dashboard application-key-like value. Reachable Git history has since been rewritten to replace that plaintext, while the runtime retains its SHA-256 deny fingerprint as defense in depth. If any deployment ever used the old value, generate a new key, replace the deployment environment or secret-store value, and restart every affected instance. History cleanup does not revoke copies that were already deployed or cloned.
 
 <!-- security-local-config:start -->
 ## Secrets and local configuration

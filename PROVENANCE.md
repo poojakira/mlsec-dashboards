@@ -16,7 +16,7 @@ This audit separates three different things:
 2. **Pre-Git source lineage** — accepted only when a dated artifact clearly refers to the same project or an identifiable direct precursor.
 3. **Background dates** — course years, publication years, CVE/incident dates, dataset dates, framework versions, test timestamps, and copied changelog labels do **not** backdate a repository unless they directly prove the project's own existence.
 
-Git history is preserved as historical evidence. It is not rewritten or backdated from later documents.
+Git history is preserved as historical evidence except for narrowly scoped security sanitation. Credential-like plaintext may be replaced across reachable history without changing the documented project dates or manufacturing earlier provenance.
 
 ## Findings
 
@@ -48,7 +48,7 @@ Evidence considered in this pass included:
 | Repository files/docs | README, changelog, reports, embedded date labels, provenance files, and high-visibility docs | No dated file reviewed establishes this repository or a clearly identifiable direct precursor before **2026**. |
 | Course/project references | Course codes, academic project references, publication links, and research-period references present in or connected to the repository | No course/publication reference reviewed proves this repository existed before **2026**. Earlier academic work remains a separate provenance track unless direct lineage is documented. |
 | Internal evidence | Repository-local evidence files and previously audited connected-source metadata | Supports the documented 2026 development/research period; no direct pre-2026 same-project artifact was established. |
-| Commit identity/history integrity | Historical author/committer objects and existing timestamps | Preserved as-is. No commits were backdated, timestamp-rewritten, or replaced to manufacture an older timeline. |
+| Commit identity/history integrity | Historical author/committer objects and existing timestamps | Security sanitation may replace credential-like file content across reachable history. Commit timestamps are not backdated or altered to manufacture an older timeline. |
 
 ### Repository-specific evidence notes
 
@@ -60,4 +60,4 @@ Evidence considered in this pass included:
 
 ### History policy
 
-This audit records provenance **without rewriting Git history**. If stronger pre-Git evidence is discovered later, document it as pre-Git lineage with the artifact date and source; do not alter historical commit timestamps.
+This audit does not rewrite history to create older provenance. A security-only history rewrite may replace exposed credential-like plaintext while preserving the evidence-based project timeline. If stronger pre-Git evidence is discovered later, document it as pre-Git lineage with the artifact date and source; do not alter historical commit timestamps to manufacture an earlier origin.

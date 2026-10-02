@@ -98,4 +98,4 @@ unreadable file → clean 500), and the 10 MB evidence-file size cap.
 
 Copy `.env.example` to the ignored `.env` file, populate your own generated key, and start with `uvicorn dashboard_server:app --env-file .env --host 127.0.0.1 --port 8080`. Do not copy credentials from repository history. The Python entrypoint does not read `.env` automatically. Only placeholder/empty templates are safe to commit.
 
-If the historical README key at `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` was used, replace `DASHBOARD_API_KEY` in each deployment's environment or secret store and restart all instances. GitHub cannot revoke a locally configured application key; history removal does not disable deployed copies. No provider key was validated or revoked by this review.
+If a deployment ever used the dashboard key-like value from the pre-sanitization history, replace `DASHBOARD_API_KEY` in each deployment's environment or secret store and restart all instances. The reachable Git history is sanitized, but history removal does not disable copies that were already deployed or cloned. No provider credential was validated or revoked by this review.
