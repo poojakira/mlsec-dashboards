@@ -417,6 +417,7 @@ def test_metric_values_cannot_include_secrets_or_nonfinite_numbers():
 
 def test_revoked_api_key_guard_uses_hash_without_storing_plaintext(monkeypatch):
     import hashlib
+
     import dashboard_server
 
     revoked = "unit-test-revoked-dashboard-key"
