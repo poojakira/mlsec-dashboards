@@ -1,8 +1,8 @@
-# Claim Ledger â€” Poster 10 (10-mlsec-dashboards)
+# Claim Ledger — Poster 10 (10-mlsec-dashboards)
 
 > Evidence status: This is a dated repository snapshot at the commit identified below. `VERIFIED_AT_SNAPSHOT` means verified for that commit and environment; it does not assert the same result on the latest `main`. Compare newer claims with the repository evidence before reuse.
 
-MIT â€¢ Python 3.12 â€¢ source snapshot a14ee69 â€¢ verified 2026-10-01. Classification: VERIFIED_AT_SNAPSHOT / VERIFIED_HISTORICAL / PARTIAL / UNVERIFIED / UNSUPPORTED.
+MIT • Python 3.12 • source snapshot a14ee69 • verified 2026-10-01. Classification: VERIFIED_AT_SNAPSHOT / VERIFIED_HISTORICAL / PARTIAL / UNVERIFIED / UNSUPPORTED.
 
 | # | Claim | Classification | Evidence |
 |---|---|---|---|
