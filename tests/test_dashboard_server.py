@@ -413,3 +413,19 @@ def test_metric_values_cannot_include_secrets_or_nonfinite_numbers():
         )
         == {}
     )
+
+
+def test_revoked_api_key_guard_uses_hash_without_storing_plaintext(monkeypatch):
+    import hashlib
+    import dashboard_server
+
+    revoked = "unit-test-revoked-dashboard-key"
+    monkeypatch.setattr(
+        dashboard_server,
+        "_REVOKED_API_KEY_SHA256",
+        hashlib.sha256(revoked.encode("utf-8")).hexdigest(),
+    )
+
+    assert dashboard_server._is_revoked_api_key(revoked) is True
+    assert dashboard_server._is_revoked_api_key("different-key") is False
+    assert dashboard_server._is_revoked_api_key("") is False

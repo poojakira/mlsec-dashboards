@@ -14,6 +14,7 @@ Environment Variables:
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 import json
 import math
@@ -35,7 +36,24 @@ from fastapi.staticfiles import StaticFiles
 # ---------------------------------------------------------------------------
 
 API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
+_REVOKED_API_KEY_SHA256 = (
+    "6d51b0ded27991c258a110849c4f6140201ff4af1842853cf80292dda04ece26"
+)
 ENVIRONMENT = os.environ.get("DASHBOARD_ENV", "development").strip().lower()
+
+
+def _is_revoked_api_key(value: str) -> bool:
+    """Return True for the explicitly revoked historical dashboard credential."""
+    if not value:
+        return False
+    candidate = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return hmac.compare_digest(candidate, _REVOKED_API_KEY_SHA256)
+
+
+if _is_revoked_api_key(API_KEY):
+    raise RuntimeError(
+        "DASHBOARD_API_KEY matches a revoked historical credential; generate a new secret"
+    )
 if ENVIRONMENT == "production" and len(API_KEY) < 32:
     raise RuntimeError("DASHBOARD_API_KEY must be at least 32 characters in production")
 RATE_LIMIT_RPM = int(os.environ.get("DASHBOARD_RATE_LIMIT_RPM", "180"))
@@ -481,7 +499,9 @@ if __name__ == "__main__":
 
     if not API_KEY:
         print("\n  WARNING: DASHBOARD_API_KEY not set. API endpoints will return 503.")
-        print("  Set DASHBOARD_API_KEY to your own generated 32+ character secret before using API routes.")
+        print(
+            "  Set DASHBOARD_API_KEY to your own generated 32+ character secret before using API routes."
+        )
 
     print("\n  ML Security Dashboard Hub -> http://localhost:8080")
     print("  Serving static dashboards + metrics API\n")
