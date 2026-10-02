@@ -420,10 +420,14 @@ def test_revoked_api_key_guard_uses_hash_without_storing_plaintext(monkeypatch):
     import dashboard_server
 
     revoked = "unit-test-revoked-dashboard-key"
+    salt = b"unit-test-salt-16"
+    monkeypatch.setattr(dashboard_server, "_REVOKED_API_KEY_SALT", salt)
     monkeypatch.setattr(
         dashboard_server,
-        "_REVOKED_API_KEY_SHA256",
-        hashlib.sha256(revoked.encode("utf-8")).hexdigest(),
+        "_REVOKED_API_KEY_SCRYPT",
+        hashlib.scrypt(
+            revoked.encode("utf-8"), salt=salt, n=2**14, r=8, p=1, dklen=32
+        ).hex(),
     )
 
     assert dashboard_server._is_revoked_api_key(revoked) is True

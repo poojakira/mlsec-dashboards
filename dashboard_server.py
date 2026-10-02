@@ -36,8 +36,9 @@ from fastapi.staticfiles import StaticFiles
 # ---------------------------------------------------------------------------
 
 API_KEY = os.environ.get("DASHBOARD_API_KEY", "")
-_REVOKED_API_KEY_SHA256 = (
-    "6d51b0ded27991c258a110849c4f6140201ff4af1842853cf80292dda04ece26"
+_REVOKED_API_KEY_SALT = bytes.fromhex("2bd25af6c2d981f049c870b942b0fd8f")
+_REVOKED_API_KEY_SCRYPT = (
+    "f701a1a2bb56358cf46c9e7a0d8379e8a9defcabf05c8bc0e3fb606807236542"
 )
 ENVIRONMENT = os.environ.get("DASHBOARD_ENV", "development").strip().lower()
 
@@ -46,8 +47,15 @@ def _is_revoked_api_key(value: str) -> bool:
     """Return True for the explicitly revoked historical dashboard credential."""
     if not value:
         return False
-    candidate = hashlib.sha256(value.encode("utf-8")).hexdigest()
-    return hmac.compare_digest(candidate, _REVOKED_API_KEY_SHA256)
+    candidate = hashlib.scrypt(
+        value.encode("utf-8"),
+        salt=_REVOKED_API_KEY_SALT,
+        n=2**14,
+        r=8,
+        p=1,
+        dklen=32,
+    ).hex()
+    return hmac.compare_digest(candidate, _REVOKED_API_KEY_SCRYPT)
 
 
 if _is_revoked_api_key(API_KEY):
