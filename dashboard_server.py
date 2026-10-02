@@ -481,7 +481,7 @@ if __name__ == "__main__":
 
     if not API_KEY:
         print("\n  WARNING: DASHBOARD_API_KEY not set. API endpoints will return 503.")
-        print("  Set it:  export DASHBOARD_API_KEY=replace-with-a-random-secret-at-least-32-characters
+        print("  Set it:  export DASHBOARD_API_KEY=replace-with-a-random-secret-at-least-32-characters")
 
     print("\n  ML Security Dashboard Hub -> http://localhost:8080")
     print("  Serving static dashboards + metrics API\n")

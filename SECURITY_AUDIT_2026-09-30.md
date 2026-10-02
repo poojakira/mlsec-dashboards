@@ -44,14 +44,14 @@ Password reset and SQL tenant isolation unless accounts/data storage are added.
 Original revision: `4761710551f0ad5708c3302dc649d68a8fc4b122`. Fixed invalid-key rotation rate-limit bypass, unbounded inactive identity retention, symlink evidence escapes, read-time size enforcement, non-ASCII key comparison errors, disclosure of nonnumeric metric content, and unescaped legacy HF severity markup. Added regression tests; 36 pass locally. Read-only checkout workflows no longer persist credentials. Authentication grants shared read access, without tenant/per-repository authorization. No upload endpoint exists. Multi-worker rate limiting, hostile local filesystem writers, TLS, and the separate legacy localhost service remain outside this implementation's guarantees.
 
 
-Reachable-history scanner triage: ten curl-header detections are documented placeholder constants. A historical `DASHBOARD_API_KEY` assignment in `README.md` at commit `aa687f5bcf8a92d55242c1e21e0a4eaaed500be8` remains a potential exposed local application key: it is not a cloud-provider key and was not tested against any endpoint. If ever deployed, replace it in the deployment secret store; no provider revocation or history rewrite was performed. The only credential-shaped filename observed in history was a vendored certifi public CA bundle, not a private key.
+Reachable-history scanner triage: curl-header detections are documented placeholder constants. A dashboard application-key-like value found in the pre-sanitization README history was treated as potentially exposed even though it was not a cloud-provider key and was not tested against an endpoint. Reachable Git history was subsequently rewritten to replace the plaintext. The only credential-shaped filename observed during review was a vendored certifi public CA bundle, not a private key.
 
 The isolated dependency audit initially identified advisories in the audit environment's old pip (25.0.1), not dashboard runtime dependencies. After upgrading isolated pip to 26.2.1, `pip-audit --progress-spinner=off` reported no known vulnerabilities.
 
 <!-- hardening-followup-20260930:start -->
 ## Follow-up hardening — 2026-09-30
 
-- The historical dashboard application-key-like value previously noted in this audit is now explicitly rejected by the runtime using a SHA-256 fingerprint. The historical plaintext was not recommitted. A regression test verifies the deny behavior with synthetic values.
+- The dashboard application-key-like value previously noted in this audit is explicitly rejected by the runtime using a SHA-256 fingerprint, and the reachable Git history has been sanitized so the old plaintext is no longer present. A regression test verifies the deny behavior with synthetic values.
 - This is an application-owned dashboard key, not a cloud-provider credential with a central revocation API. Any deployment that ever used the historical value must generate a fresh key, replace the deployment secret, and restart affected instances.
 - GitHub Actions workflow-policy validation was strengthened on `main`, including nested action-path SHA validation and rejection of dangerous workflow triggers.
 - The dashboard remains a single shared trust domain; tenant/per-repository authorization and multi-worker distributed rate limiting remain architecture/deployment limits rather than claimed controls.
