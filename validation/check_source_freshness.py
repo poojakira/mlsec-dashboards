@@ -1,4 +1,4 @@
-"""Check that dashboard headline metrics still match source-repository evidence."""
+"""Check static dashboard headline metrics against immutable source snapshots."""
 
 from __future__ import annotations
 
@@ -7,41 +7,70 @@ import re
 import urllib.request
 from pathlib import Path
 
-USER_AGENT = "mlsec-dashboard-freshness/1.0"
+USER_AGENT = "mlsec-dashboard-source-snapshot/1.0"
 DASHBOARD = Path("index.html")
+SOURCE_REGISTRY = Path("validation/source_snapshots.json")
+_SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 CHECKS = [
     {
         "name": "attack-v19 tests",
-        "url": "https://raw.githubusercontent.com/poojakira/attack-v19-core/main/poster/03_verified_metrics.md",
+        "source_key": "attack_v19",
         "source_regex": r"Tests passed\s*\|\s*\*\*(\d+)\*\*",
         "dashboard_template": "{value} passing tests",
     },
     {
         "name": "HF scanner tests",
-        "url": "https://raw.githubusercontent.com/poojakira/hf-model-provenance-scanner/main/poster/03_verified_metrics.md",
+        "source_key": "hf_scanner",
         "source_regex": r"Tests passed\s*\|\s*\*\*(\d+)\*\*",
         "dashboard_template": 'data-target="{value}"',
     },
     {
         "name": "HF scanner coverage",
-        "url": "https://raw.githubusercontent.com/poojakira/hf-model-provenance-scanner/main/poster/03_verified_metrics.md",
+        "source_key": "hf_scanner",
         "source_regex": r"Statement coverage\s*\|\s*\*\*([0-9.]+)%",
         "dashboard_template": 'data-target="{value}" data-suffix="%"',
     },
     {
         "name": "LLM grouped F1",
-        "url": "https://raw.githubusercontent.com/poojakira/llm-redteam-framework/main/README.md",
+        "source_key": "llm_redteam",
         "source_regex": r"Grouped-split F1 \(in-distribution\)\s*\|\s*([0-9.]+)",
         "dashboard_template": "{value}",
     },
     {
         "name": "LLM OOD F1",
-        "url": "https://raw.githubusercontent.com/poojakira/llm-redteam-framework/main/README.md",
+        "source_key": "llm_redteam",
         "source_regex": r"Novel-phrasing OOD F1\s*\|\s*([0-9.]+)",
         "dashboard_template": "{value}",
     },
 ]
+
+
+def load_sources() -> dict[str, dict[str, str]]:
+    payload = json.loads(SOURCE_REGISTRY.read_text(encoding="utf-8"))
+    sources = payload.get("sources")
+    if not isinstance(sources, dict) or not sources:
+        raise ValueError("source snapshot registry must contain a non-empty sources object")
+    for key, source in sources.items():
+        if not isinstance(source, dict):
+            raise ValueError(f"{key}: source entry must be an object")
+        repository = source.get("repository", "")
+        revision = source.get("revision", "")
+        path = source.get("path", "")
+        if not repository.startswith("poojakira/"):
+            raise ValueError(f"{key}: unsupported source repository")
+        if not _SHA40.fullmatch(revision):
+            raise ValueError(f"{key}: revision must be an immutable 40-char SHA")
+        if not path or path.startswith("/") or ".." in Path(path).parts:
+            raise ValueError(f"{key}: unsafe source path")
+    return sources
+
+
+def source_url(source: dict[str, str]) -> str:
+    return (
+        "https://raw.githubusercontent.com/"
+        f"{source['repository']}/{source['revision']}/{source['path']}"
+    )
 
 
 def fetch_text(url: str) -> str:
@@ -52,13 +81,16 @@ def fetch_text(url: str) -> str:
 
 def main() -> int:
     dashboard = DASHBOARD.read_text(encoding="utf-8")
+    sources = load_sources()
     results = []
     failures = []
     cache: dict[str, str] = {}
 
     for check in CHECKS:
-        source = cache.setdefault(check["url"], fetch_text(check["url"]))
-        match = re.search(check["source_regex"], source)
+        source = sources[check["source_key"]]
+        url = source_url(source)
+        text = cache.setdefault(url, fetch_text(url))
+        match = re.search(check["source_regex"], text)
         if not match:
             failures.append(f"{check['name']}: source metric not found")
             continue
@@ -68,7 +100,9 @@ def main() -> int:
         results.append(
             {
                 "name": check["name"],
-                "source": check["url"],
+                "source_repository": source["repository"],
+                "source_revision": source["revision"],
+                "source_path": source["path"],
                 "source_value": value,
                 "dashboard_marker": expected,
                 "fresh": present,
@@ -78,11 +112,14 @@ def main() -> int:
             failures.append(f"{check['name']}: dashboard does not contain {expected!r}")
 
     report = {
-        "classification": "source-evidence-freshness-check",
+        "classification": "revision-bound-source-evidence-snapshot-check",
         "results": results,
         "passed": not failures,
         "failures": failures,
-        "claim_boundary": "Checks traceability/freshness only; it does not reproduce source benchmarks.",
+        "claim_boundary": (
+            "Checks static dashboard values against exact source revisions; "
+            "it does not reproduce source benchmarks or prove the pinned revisions are latest."
+        ),
     }
     Path("validation").mkdir(exist_ok=True)
     Path("validation/source-freshness.json").write_text(
