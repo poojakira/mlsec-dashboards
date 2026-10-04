@@ -1,0 +1,21 @@
+{
+  "schema_version": "dashboard-source-snapshots-v1",
+  "sources": {
+    "attack_v19": {
+      "repository": "poojakira/attack-v19-core",
+      "revision": "087accffc7d9ba7e2c086b9ef72ef7ac6f23c29b",
+      "path": "poster/03_verified_metrics.md"
+    },
+    "hf_scanner": {
+      "repository": "poojakira/hf-model-provenance-scanner",
+      "revision": "251a7b90fd60fa1884c643adda9d96cd7801abe6",
+      "path": "poster/03_verified_metrics.md"
+    },
+    "llm_redteam": {
+      "repository": "poojakira/llm-redteam-framework",
+      "revision": "3b349a888fc9dc319529ea1f2e0faee4a4af8117",
+      "path": "README.md"
+    }
+  },
+  "claim_boundary": "These revisions bind static dashboard headline values to exact source snapshots. They do not assert that the snapshots are the latest source revisions."
+}
