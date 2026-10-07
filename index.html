@@ -349,21 +349,21 @@ body { padding-top: 0; }
     <div class="fc-tag">🛡 MCP Gateway Monitor</div>
     <h3>MCP Security Gateway Monitor</h3>
     <p class="fc-desc">
-      5-layer tool-call firewall for MCP agents. Red-team benchmark across 37 attack scenarios.
-      Blocks exfiltration and evasion variants; misses credential harvest and prompt injection.
+      Inline MCP/JSON-RPC security gateway with prompt-injection patterns, capability checks,
+      exfiltration signals, audit logging, rate limiting, and SIEM-oriented telemetry.
     </p>
     <div class="fc-metrics">
       <div class="fc-metric">
-        <div class="val ds-counter" data-target="51" data-suffix="%">0%</div>
-        <div class="lbl">Detection rate</div>
+        <div class="val ds-counter" data-target="723">0</div>
+        <div class="lbl">Passing tests</div>
       </div>
       <div class="fc-metric">
-        <div class="val ds-counter" data-target="37">0</div>
-        <div class="lbl">Attacks tested</div>
+        <div class="val ds-counter" data-target="81.91" data-suffix="%">0%</div>
+        <div class="lbl">Statement coverage</div>
       </div>
       <div class="fc-metric">
-        <div class="val" style="color:var(--red)">6</div>
-        <div class="lbl">Gap categories</div>
+        <div class="val">55</div>
+        <div class="lbl">Injection patterns</div>
       </div>
     </div>
     <div class="fc-cta">View dashboard <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
@@ -374,21 +374,21 @@ body { padding-top: 0; }
     <div class="fc-tag">🔍 Supply Chain Scanner</div>
     <h3>HF Model Provenance Scanner</h3>
     <p class="fc-desc">
-      Scans HuggingFace model artifacts for supply-chain attacks: pickle exploits, typosquatting,
-      unsigned weights, C2 callbacks. 33/33 attacks blocked across 5 analysis engines.
+      Non-executing model-artifact scanner for pickle risk, provenance gaps, impersonation,
+      suspicious loaders, serialization formats, and supply-chain indicators.
     </p>
     <div class="fc-metrics">
       <div class="fc-metric">
-        <div class="val ds-counter" data-target="100" data-suffix="%">0%</div>
-        <div class="lbl">Block rate (33/33)</div>
+        <div class="val ds-counter" data-target="241">0</div>
+        <div class="lbl">Passing tests</div>
+      </div>
+      <div class="fc-metric">
+        <div class="val ds-counter" data-target="75.67" data-suffix="%">0%</div>
+        <div class="lbl">Statement coverage</div>
       </div>
       <div class="fc-metric">
         <div class="val ds-counter" data-target="33">0</div>
-        <div class="lbl">Attacks tested</div>
-      </div>
-      <div class="fc-metric">
-        <div class="val ds-counter" data-target="9.6" data-suffix="ms">0ms</div>
-        <div class="lbl">Avg scan time</div>
+        <div class="lbl">Attack fixtures</div>
       </div>
     </div>
     <div class="fc-cta">View dashboard <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
@@ -452,10 +452,10 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>HF Model Provenance Scanner</h4>
       </div>
-      <p>Supply chain attack scanner for HuggingFace. Internal fixture suite: 12/12 detected. Not a general detection rate.</p>
+      <p>Supply chain attack scanner for Hugging Face. Aggregate committed adversarial fixture suite: 33/33 detected (12 core + 18 extended + 3 large-scale). Not a general real-world detection rate.</p>
       <div class="repo-card-footer">
         <span class="repo-type-badge rtype-working">Operational system</span>
-        <span class="repo-metric text-teal">12/12 fixtures</span>
+        <span class="repo-metric text-teal">33/33 fixtures</span>
       </div>
     </a>
 
@@ -463,7 +463,7 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>LLM Redteam Framework</h4>
       </div>
-      <p>Prompt-injection detector. F1=0.9714 grouped held-out / 0.7188 novel-phrasing OOD. Gap documented.</p>
+      <p>Prompt-injection detector. 182 passed / 1 skipped at 94.22% coverage; F1=0.9714 grouped held-out / 0.7188 novel-phrasing OOD. Gap documented.</p>
       <div class="repo-card-footer">
         <span class="repo-type-badge rtype-working">Operational system</span>
         <span class="repo-metric text-amber">F1 0.97 → 0.7188 OOD</span>
@@ -474,7 +474,7 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>Adversarial ML Lab</h4>
       </div>
-      <p>FGSM/PGD/C&W attacks + Randomized Smoothing defense. CIFAR-10 SmallCNN measured: clean 71.82%, PGD-20 0.00% at ε=8/255.</p>
+      <p>FGSM/PGD/C&W robustness evaluation. 112 passing tests at 32.22% overall coverage; CIFAR-10 SmallCNN measured: clean 71.82%, PGD-20 0.00% at ε=8/255.</p>
       <div class="repo-card-footer">
         <span class="repo-type-badge rtype-operational">Production-oriented system</span>
         <span class="repo-metric text-muted">71.82% → 0.00% (PGD-20)</span>
@@ -496,10 +496,10 @@ body { padding-top: 0; }
       <div class="repo-card-top">
         <h4>Dataset Poisoning Detector</h4>
       </div>
-      <p>Training data anomaly flagging. ROC-AUC ~0.54 (baseline). Honest result — target is 0.75.</p>
+      <p>200 passing tests at 91.20% statement coverage. Synthetic cross-class label-flip F1 is 0.55 / 0.595 / 0.6975 at 5% / 10% / 20% poison; feature-space methods remain weak on label flips.</p>
       <div class="repo-card-footer">
         <span class="repo-type-badge rtype-operational">Production-oriented system</span>
-        <span class="repo-metric text-muted">ROC-AUC ~0.54</span>
+        <span class="repo-metric text-muted">Spectral F1 0.6142 avg</span>
       </div>
     </a>
 
