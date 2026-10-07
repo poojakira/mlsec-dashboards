@@ -111,9 +111,9 @@ Token-authenticated REST endpoints (aggregated metrics for CI)
 | Component | Responsibility |
 |-----------|---------------|
 | `dashboard_server.py` | FastAPI app: auth, CORS, evidence file discovery, metrics aggregation, static file serving |
-| `index.html` | Main portfolio overview page with cards for the active repos, category filters, honesty notes |
+| `index.html` | Main evidence-dashboard overview with cards for active repos, category filters, and scope notes |
 | `shared/design-system.css` | Unified dark-theme design system (CSS custom properties, grid layouts, stat cards, tables) |
-| `shared/dashboard.js` | Client-side utilities: animated counters, sortable/filterable tables, tab switching, live scan demo |
+| `shared/dashboard.js` | Client-side utilities: animated counters, sortable/filterable tables, tab switching, and local interactive demos |
 | `<repo-name>/index.html` | Per-project dashboard pages with embedded benchmark data |
 | `tests/` | pytest suite covering auth, health, metrics extraction, JSON parsing |
 
@@ -245,7 +245,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 
 **Limitations:**
 - Most dashboard data is static benchmark output embedded in HTML, not live monitoring.
-- Only the MCP gateway has real-time capability when its server is running.
+- MCP runtime data is available only in local developer mode when the gateway and supporting server are running; the hosted dashboard remains a static evidence view.
 - Metrics are from controlled benchmarks; real-world performance will differ.
 - The `/api/metrics` endpoint only finds evidence if sibling repos are cloned locally.
 
@@ -265,7 +265,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 | Test coverage | Good | 37 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit, revoked-credential, and evidence-boundary regressions |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
-**Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
+**Verdict:** Suitable for its stated local developer-tool and evidence-dashboard purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
 
 ---
 

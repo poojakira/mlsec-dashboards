@@ -331,17 +331,18 @@ body { padding-top: 0; }
     Interactive evidence dashboards for 13 ML security repositories.
     Benchmark results, detection metrics, and gap analysis — all from actual test runs.
   </p>
+  <p class="hero-sub"><a href="https://poojakira.github.io/Pooja_Kiran_Portfolio_Website/" style="color:var(--blue);font-weight:700">Canonical recruiter portfolio →</a></p>
   <div class="hero-honesty">
     <strong>Honesty note:&nbsp;</strong>
     These are interactive evidence dashboards, not live security monitoring.
     Most data is static benchmark output embedded in HTML.
-    The MCP gateway is the only one with real-time capability when a server is running.
+    The MCP page can connect to an operator-run local runtime; the hosted view itself remains a static evidence surface.
     Weak results are shown as-is — limitations are explained, not hidden.
   </div>
 </section>
 
 <!-- Featured three -->
-<div class="featured-label">Three strongest systems — production-oriented implementations with scoped evidence</div>
+<div class="featured-label">Three flagship evidence dashboards — implementation and verification snapshots</div>
 <div class="featured-grid">
 
   <!-- MCP -->
@@ -427,8 +428,8 @@ body { padding-top: 0; }
 
   <div class="filter-tabs" id="filter-tabs">
     <button class="ftab active" data-filter="all">All</button>
-    <button class="ftab" data-filter="working">Operational system</button>
-    <button class="ftab" data-filter="operational">Production-oriented system</button>
+    <button class="ftab" data-filter="working">Evidence-backed tool</button>
+    <button class="ftab" data-filter="operational">Engineering prototype</button>
     <button class="ftab" data-filter="spec">Architecture spec</button>
     <button class="ftab" data-filter="smoke">Smoke tests</button>
     <button class="ftab" data-filter="viz">Visualization</button>
@@ -443,7 +444,7 @@ body { padding-top: 0; }
       </div>
       <p>5-layer MCP tool-call firewall. 37/37 blocked on the fixed bundled self-test catalog; this is a regression signal, not a real-world detection rate.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-working">Operational system</span>
+        <span class="repo-type-badge rtype-working">Evidence-backed tool</span>
         <span class="repo-metric text-amber">37/37 self-test</span>
       </div>
     </a>
@@ -454,7 +455,7 @@ body { padding-top: 0; }
       </div>
       <p>Supply chain attack scanner for Hugging Face. Aggregate committed adversarial fixture suite: 33/33 detected (12 core + 18 extended + 3 large-scale). Not a general real-world detection rate.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-working">Operational system</span>
+        <span class="repo-type-badge rtype-working">Evidence-backed tool</span>
         <span class="repo-metric text-teal">33/33 fixtures</span>
       </div>
     </a>
@@ -465,7 +466,7 @@ body { padding-top: 0; }
       </div>
       <p>Prompt-injection detector. 182 passed / 1 skipped at 94.22% coverage; F1=0.9714 grouped held-out / 0.7188 novel-phrasing OOD. Gap documented.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-working">Operational system</span>
+        <span class="repo-type-badge rtype-working">Evidence-backed tool</span>
         <span class="repo-metric text-amber">F1 0.97 → 0.7188 OOD</span>
       </div>
     </a>
@@ -476,7 +477,7 @@ body { padding-top: 0; }
       </div>
       <p>FGSM/PGD/C&W robustness evaluation. 112 passing tests at 32.22% overall coverage; CIFAR-10 SmallCNN measured: clean 71.82%, PGD-20 0.00% at ε=8/255.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
+        <span class="repo-type-badge rtype-operational">Engineering prototype</span>
         <span class="repo-metric text-muted">71.82% → 0.00% (PGD-20)</span>
       </div>
     </a>
@@ -487,7 +488,7 @@ body { padding-top: 0; }
       </div>
       <p>Membership inference + model extraction. Adult/OpenML DirectMIA mean AUC 0.557 across 5 seeds.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
+        <span class="repo-type-badge rtype-operational">Engineering prototype</span>
         <span class="repo-metric text-muted">MI AUC 0.557</span>
       </div>
     </a>
@@ -498,7 +499,7 @@ body { padding-top: 0; }
       </div>
       <p>200 passing tests at 91.20% statement coverage. Synthetic cross-class label-flip F1 is 0.55 / 0.595 / 0.6975 at 5% / 10% / 20% poison; feature-space methods remain weak on label flips.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
+        <span class="repo-type-badge rtype-operational">Engineering prototype</span>
         <span class="repo-metric text-muted">Spectral F1 0.6142 avg</span>
       </div>
     </a>
@@ -542,7 +543,7 @@ body { padding-top: 0; }
       </div>
       <p>Static IAM policy linter for AI agent workloads. Checks wildcards, PassRole, trust boundary issues.</p>
       <div class="repo-card-footer">
-        <span class="repo-type-badge rtype-operational">Production-oriented system</span>
+        <span class="repo-type-badge rtype-operational">Engineering prototype</span>
         <span class="repo-metric text-muted">Static analysis</span>
       </div>
     </a>
@@ -586,7 +587,7 @@ body { padding-top: 0; }
 <footer class="site-footer">
   <a href="https://github.com/poojakira">github.com/poojakira</a> ·
   <a href="https://linkedin.com/in/poojakiran">linkedin.com/in/poojakiran</a> ·
-  Pooja Kiran — ML Security Engineer
+  Pooja Kiran — Security Engineer
 </footer>
 
 <script src="./shared/dashboard.js"></script>

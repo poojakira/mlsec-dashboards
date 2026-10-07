@@ -65,14 +65,14 @@
   </a>
   <div class="ds-nav-sep"></div>
   <div class="ds-nav-title">LLM Redteam Framework</div>
-  <span class="ds-nav-badge interactive" id="nav-badge">Checking…</span>
+  <span class="ds-nav-badge evidence" id="nav-badge">Static evidence</span>
 </nav>
 
 <div class="ds-page">
   <div class="ds-page-header">
     <h1>LLM Redteam Framework <span style="font-size:1rem;font-weight:400;color:var(--muted)">— Static</span></h1>
     <div class="ds-meta">
-      <span>Runs <code>redteam-eval</code> via dashboard_server, streams stdout</span>
+      <span>Optional local developer mode can run <code>redteam-eval</code> through dashboard_server and stream stdout</span>
       <span>·</span>
       <a href="https://github.com/poojakira/llm-redteam-framework" target="_blank">Source repo ↗</a>
     </div>
@@ -85,7 +85,7 @@
 
   <div class="offline-notice" id="offline-notice">
     <div>
-      <strong style="color:var(--amber)">dashboard_server not running.</strong>
+      <strong style="color:var(--amber)">Static evidence mode.</strong>
       The optional proxy on <code>localhost:9001</code> is not shipped in this repo.<br>
       Metrics below are from the last committed benchmark run.
     </div>
@@ -116,7 +116,7 @@
   <div class="ds-section" style="margin-top:16px">
     <div class="ds-section-title">
       Evaluation results
-      <span class="f1-live-badge" id="live-badge" style="display:none">● Live result</span>
+      <span class="f1-live-badge" id="live-badge" style="display:none">● Local result</span>
     </div>
 
     <div class="f1-compare" style="margin-bottom:16px">
@@ -259,7 +259,7 @@ async function checkServer() {
       document.getElementById('nav-badge').className = 'ds-nav-badge operational';
     }
   } catch {
-    document.getElementById('nav-badge').textContent = 'Offline';
+    document.getElementById('nav-badge').textContent = 'Static evidence';
     document.getElementById('nav-badge').className = 'ds-nav-badge simulated';
     document.getElementById('run-btn').disabled = true;
   }
