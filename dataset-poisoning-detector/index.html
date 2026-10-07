@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dataset Poisoning Detector — Live Dashboard</title>
+<title>Dataset Poisoning Detector — Evidence Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 </head>
@@ -12,7 +12,7 @@
   <a class="ds-nav-back" href="../"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg> All dashboards</a>
   <div class="ds-nav-sep"></div>
   <div class="ds-nav-title">Dataset Poisoning Detector</div>
-  <span class="ds-nav-badge operational" id="nav-badge">Detection service</span>
+  <span class="ds-nav-badge evidence" id="nav-badge">Evaluation dashboard</span>
 </nav>
 <div class="ds-page">
   <div class="ds-page-header">
@@ -28,14 +28,14 @@
   </div>
 
   <div class="ds-panel" style="margin-bottom:20px">
-    <div class="ds-panel-title">Run live detection eval</div>
+    <div class="ds-panel-title">Optional local developer evaluation</div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <select id="method-select" class="ds-filter-select">
         <option value="spectral">Spectral signature</option>
         <option value="influence">Influence functions</option>
       </select>
-      <button id="run-btn" disabled class="ds-filter-select" style="background:var(--teal);color:#000;border-color:var(--teal);cursor:pointer;font-weight:700">Start dashboard_server to enable</button>
-      <span style="font-size:.7rem;color:var(--dim)">Live AUC: <strong id="live-auc" style="color:var(--teal)">—</strong></span>
+      <button id="run-btn" disabled class="ds-filter-select" style="background:var(--teal);color:#000;border-color:var(--teal);cursor:pointer;font-weight:700">Local only: start dashboard_server to enable</button>
+      <span style="font-size:.7rem;color:var(--dim)">Local result: <strong id="live-auc" style="color:var(--teal)">—</strong></span>
     </div>
     <div id="run-log" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto;margin-top:8px;font-family:var(--mono);font-size:.72rem;color:var(--muted)"></div>
   </div>
