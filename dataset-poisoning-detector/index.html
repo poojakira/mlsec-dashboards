@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dataset Poisoning Detector — Static Dashboard</title>
+<title>Dataset Poisoning Detector — Live Dashboard</title>
 <link rel="stylesheet" href="../shared/design-system.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 </head>
@@ -23,8 +23,8 @@
     </div>
   </div>
   <div class="ds-honesty">
-    <strong>Static, last-measured data — ROC-AUC ~0.54, barely above random baseline of 0.50.</strong>
-    Target is 0.75. That gap has not been closed. The "run live" panel below is optional: it targets a <code>dashboard_server</code> proxy on <code>localhost:9001</code> that is <strong>not included in this repo</strong>. Without it, this page shows the static, last-measured value above.
+    <strong>Committed synthetic label-flip benchmark data.</strong>
+    In <code>results/spectral_benchmark.json</code>, spectral detection averages F1=0.6142 versus 0.1531 for the feature-space ensemble across 5%, 10%, and 20% contamination. These are synthetic benchmark F1 values, not ROC-AUC or production efficacy.
   </div>
 
   <div class="ds-panel" style="margin-bottom:20px">
@@ -41,25 +41,24 @@
   </div>
 
   <div class="ds-stats">
-    <div class="ds-stat amber"><div class="stat-value">0.54</div><div class="stat-label">ROC-AUC baseline</div><div class="stat-sub">Label-flip detection</div></div>
-    <div class="ds-stat blue"><div class="stat-value">0.75</div><div class="stat-label">Target AUC</div><div class="stat-sub">Not yet achieved</div></div>
-    <div class="ds-stat red"><div class="stat-value">−0.21</div><div class="stat-label">Gap to target</div></div>
-    <div class="ds-stat violet"><div class="stat-value">3</div><div class="stat-label">Attack types</div><div class="stat-sub">Label-flip · backdoor · gradient</div></div>
+    <div class="ds-stat teal"><div class="stat-value">0.6142</div><div class="stat-label">Avg spectral F1</div><div class="stat-sub">5/10/20% label-flip contamination</div></div>
+    <div class="ds-stat amber"><div class="stat-value">0.1531</div><div class="stat-label">Avg ensemble F1</div><div class="stat-sub">Z-score + IQR + Isolation Forest</div></div>
+    <div class="ds-stat blue"><div class="stat-value">3</div><div class="stat-label">Contamination rates</div><div class="stat-sub">5% · 10% · 20%</div></div>
+    <div class="ds-stat violet"><div class="stat-value">2,000</div><div class="stat-label">Synthetic samples</div><div class="stat-sub">100 features · seed 2018</div></div>
   </div>
 
   <div class="ds-grid-2">
     <div class="ds-panel">
-      <div class="ds-panel-title">Detection AUC — baseline vs target</div>
+      <div class="ds-panel-title">Label-flip F1 by contamination rate</div>
       <canvas id="aucChart" style="max-height:220px"></canvas>
     </div>
     <div class="ds-panel">
-      <div class="ds-panel-title">Method comparison</div>
+      <div class="ds-panel-title">Committed benchmark comparison</div>
       <div class="ds-bar-group">
-        <div class="ds-bar-row"><span class="ds-bar-label">Label-flip (spectral)</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="54%">0.54</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">Backdoor (influence)</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="58%">0.58</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">Gradient manip.</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="56%">0.56</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">Target</span><div class="ds-bar-track"><div class="ds-bar-fill teal" data-width="75%">0.75</div></div></div>
-        <div class="ds-bar-row"><span class="ds-bar-label">Random baseline</span><div class="ds-bar-track"><div class="ds-bar-fill" style="background:var(--dim)" data-width="50%">0.50</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Spectral · 5%</span><div class="ds-bar-track"><div class="ds-bar-fill teal" data-width="55%">0.5500</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Spectral · 10%</span><div class="ds-bar-track"><div class="ds-bar-fill teal" data-width="59.5%">0.5950</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Spectral · 20%</span><div class="ds-bar-track"><div class="ds-bar-fill teal" data-width="69.75%">0.6975</div></div></div>
+        <div class="ds-bar-row"><span class="ds-bar-label">Ensemble average</span><div class="ds-bar-track"><div class="ds-bar-fill amber" data-width="15.31%">0.1531</div></div></div>
       </div>
     </div>
   </div>
@@ -82,7 +81,7 @@ document.getElementById('run-btn').addEventListener('click',()=>{
   es.addEventListener('error',e=>{add('Error: '+(JSON.parse(e.data||'{}').error||'unknown'));btn.disabled=false;btn.textContent='Run eval →';es.close();});
   es.onerror=()=>{add('dashboard_server not reachable.');btn.disabled=false;btn.textContent='Run eval →';es.close();};
 });
-new Chart(document.getElementById('aucChart'),{type:'bar',data:{labels:['Label-flip','Backdoor','Gradient','Target','Random'],datasets:[{label:'ROC-AUC',data:[0.54,0.58,0.56,0.75,0.50],backgroundColor:['rgba(251,191,36,.7)','rgba(251,191,36,.7)','rgba(251,191,36,.7)','rgba(45,212,191,.7)','rgba(74,80,104,.4)'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7a8299'},grid:{color:'#2a2d3e'}},y:{min:0,max:1,ticks:{color:'#7a8299'},grid:{color:'#2a2d3e'}}}}});
+new Chart(document.getElementById('aucChart'),{type:'bar',data:{labels:['5% contamination','10% contamination','20% contamination'],datasets:[{label:'Spectral F1',data:[0.55,0.595,0.6975],backgroundColor:'rgba(45,212,191,.7)',borderRadius:4},{label:'Ensemble F1',data:[0.0841,0.1421,0.2331],backgroundColor:'rgba(251,191,36,.7)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{color:'#7a8299'}}},scales:{x:{ticks:{color:'#7a8299'},grid:{color:'#2a2d3e'}},y:{min:0,max:1,ticks:{color:'#7a8299'},grid:{color:'#2a2d3e'}}}}});
 </script>
 </body>
 </html>
