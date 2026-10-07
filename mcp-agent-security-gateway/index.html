@@ -80,7 +80,7 @@
   </a>
   <div class="ds-nav-sep"></div>
   <div class="ds-nav-title">MCP Security Gateway Monitor</div>
-  <span class="ds-nav-badge interactive" id="nav-status">Connecting…</span>
+  <span class="ds-nav-badge evidence" id="nav-status">Static evidence</span>
 </nav>
 
 <div class="ds-page">
@@ -100,7 +100,7 @@
 <!-- Connection status bar -->
   <div class="conn-bar" id="conn-bar">
     <div class="conn-dot waiting" id="conn-dot"></div>
-    <span class="conn-label" id="conn-label"><strong>Connecting</strong> — waiting for dashboard_server on localhost:9001…</span>
+    <span class="conn-label" id="conn-label"><strong>Static evidence mode</strong> — optional local runtime integration is not connected.</span>
     <span class="conn-ts" id="conn-ts">—</span>
   </div>
 
@@ -183,7 +183,7 @@
 
   <footer class="ds-footer">
     <a href="../">← All dashboards</a> ·
-    Live data from <code>localhost:8080</code> via <code>localhost:9001</code> ·
+    Optional local runtime data via <code>localhost:9001</code> ·
     <a href="https://github.com/poojakira/mcp-agent-security-gateway" target="_blank">Source repo</a>
   </footer>
 </div>
@@ -266,7 +266,7 @@ function setConnected(state) {
     navStatus.className = 'ds-nav-badge simulated';
     inspectBtn.disabled = true;
   } else {
-    label.innerHTML = '<strong>Connecting</strong> — waiting for dashboard_server on localhost:9001…';
+    label.innerHTML = '<strong>Static evidence mode</strong> — optional local runtime integration is not connected.';
     navStatus.textContent = 'Connecting…';
     inspectBtn.disabled = true;
   }
