@@ -265,7 +265,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 | Test coverage | Good | 37 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit, revoked-credential, and evidence-boundary regressions |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
-**Verdict:** Suitable for its stated local developer-tool and portfolio-demo purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
+**Verdict:** Suitable for its stated local developer-tool and evidence-dashboard purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
 
 ---
 
