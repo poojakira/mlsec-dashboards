@@ -32,12 +32,12 @@
 
   <div class="ds-honesty">
     <strong>Measured benchmark data from <code>results/cifar10_smallcnn_real.json</code>.</strong>
-    On the committed CPU SmallCNN run, clean CIFAR-10 accuracy is 71.82%; PGD-20 at ε=8/255 reduces robust accuracy to 0.00%. This is a measured small-model benchmark, not the synthetic ResNet-18 projection. The "run live" panel below is optional: it targets a <code>dashboard_server</code> proxy on <code>localhost:9001</code> that is <strong>not included in this repo</strong>. Without it, this page shows the static, last-measured data above.
+    On the committed CPU SmallCNN run, clean CIFAR-10 accuracy is 71.82%; PGD-20 at ε=8/255 reduces robust accuracy to 0.00%. This is a measured small-model benchmark, not the synthetic ResNet-18 projection. The local developer panel below is optional: it targets a <code>dashboard_server</code> proxy on <code>localhost:9001</code> that is <strong>not included in this repo</strong>. Without it, this page shows the static, last-measured data above.
   </div>
 
   <!-- Optional run panel (requires an external dashboard_server proxy, not shipped here) -->
   <div class="ds-panel" style="margin-bottom:20px">
-    <div class="ds-panel-title">Run live attack evaluation</div>
+    <div class="ds-panel-title">Optional local developer attack evaluation</div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <select id="attack-select" class="ds-filter-select">
         <option value="pgd">PGD ε=8/255</option>
@@ -46,10 +46,10 @@
       </select>
       <button id="run-adv-btn" disabled class="ds-filter-select"
         style="background:var(--violet);color:#fff;border-color:var(--violet);cursor:pointer;font-weight:700">
-        Start dashboard_server to enable
+        Local only: start dashboard_server to enable
       </button>
       <span style="font-size:.7rem;color:var(--dim)">
-        Live accuracy: <strong id="live-acc" style="color:var(--teal)">—</strong>
+        Local result: <strong id="live-acc" style="color:var(--teal)">—</strong>
       </span>
     </div>
     <div id="adv-log" style="display:none;background:var(--bg);border:1px solid var(--border);
