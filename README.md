@@ -235,12 +235,12 @@ Each per-project dashboard reports metrics from that project's committed test su
 
 | Project | Metric | Value | Context |
 |---------|--------|-------|---------|
-| MCP Security Gateway | Bundled self-test | 37/37 blocked (100%) | Fixed known-payload regression catalog; not a real-world detection rate |
-| HF Provenance Scanner | Block rate | 100% (33/33) | Internal fixture suite |
-| LLM Redteam Framework | F1 | 0.97 grouped | 0.7188 on novel-phrasing OOD benchmark |
-| Adversarial ML Lab | Clean accuracy | 71.82% | Real SmallCNN benchmark; PGD-20 robust accuracy 0.00% at ε=8/255 |
+| MCP Security Gateway | Tests / coverage | 723 passed / 81.91% | Cited repository verification snapshot; 37/37 remains a separate fixed self-test catalog |
+| HF Provenance Scanner | Tests / coverage / fixtures | 241 passed, 1 skipped / 75.67% / 33/33 | Internal committed fixture suite; not a real-world detection rate |
+| LLM Redteam Framework | Tests / coverage / F1 | 182 passed, 1 skipped / 94.22% | Grouped F1 0.9714; novel-phrasing OOD F1 0.7188 |
+| Adversarial ML Lab | Tests / coverage / robustness | 112 passed / 32.22% | SmallCNN 71.82% clean; PGD-20 robust accuracy 0.00% at ε=8/255 on 1,024 samples |
 | Model Privacy Attacks | MI AUC | 0.557 mean | Adult/OpenML, 5 seeds; 95% CI 0.5525–0.5615 |
-| Dataset Poisoning Detector | ROC-AUC | ~0.54 | Near-baseline; target is 0.75 |
+| Dataset Poisoning Detector | Tests / coverage / label-flip F1 | 200 passed / 91.20% | Cross-class F1 0.55 / 0.595 / 0.6975 at 5% / 10% / 20%; average 0.6142 |
 | ATT&CK v19 Core | v19 structure tests | 18/18 | Specific structure suite; not the repository's total test count |
 
 **Limitations:**
