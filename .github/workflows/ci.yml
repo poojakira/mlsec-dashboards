@@ -25,7 +25,7 @@ jobs:
       - name: Ruff lint
         run: ruff check .
       - name: Ruff format check
-        run: ruff format --check --exclude poster/render_poster.py .
+        run: ruff format --check .
 
   test:
     runs-on: ubuntu-latest
