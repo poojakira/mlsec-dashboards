@@ -15,7 +15,7 @@ Reproduced on current `main` (Python 3.12).
 |---|---:|
 | Tests | 37 passing (current local verification) |
 | Coverage | auth, health, metrics, dashboard rendering, evidence loading |
-| Source repos aggregated | 8 active ML security repos |
+| Source repos aggregated | 8 default configured ML security repos |
 | Auth | token-based on API routes |
 
 ## Security Problem
@@ -378,3 +378,6 @@ source, tests, scripts, examples, benchmarks, validation helpers, and poster gen
 where present. Ruff's standard exclusions omit version-control metadata, virtual
 environments, and build/cache directories; generated poster HTML/PDF/PNG assets are
 not Python source. Passing these static checks does not establish runtime behavior or product effectiveness.
+
+
+Dated claim anchors (October 13, 2026 audit): this dashboard main at c651768630530d2f8f2f4ff5f96ebd53e2c44142 passed 37 tests in CI run 38298823655. Eight sibling repositories are configured by default, not guaranteed successfully aggregated. Static authored examples are not all dynamically populated. The referenced LLM 182-pass/94.22% figure is separately confirmed in run 38298939597 at 2e2989a915cc013c68c46bb6995831b6344cd2a8, October 12 UTC; it is not the older poster run with 175 passed/94.30%.

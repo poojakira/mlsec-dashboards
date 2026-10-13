@@ -3,7 +3,7 @@
 > Evidence status: This is a dated repository snapshot at the commit identified below. `VERIFIED_AT_SNAPSHOT` means verified for that commit and environment; it does not assert the same result on the latest `main`. Compare newer claims with the repository evidence before reuse.
 
 ## Repository
-`github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • source snapshot a14ee69 • verified 2026-10-01
+`github.com/poojakira/mlsec-dashboards` (public, default branch `main`, primary language Python). MIT • Python 3.12 • source snapshot c651768630530d2f8f2f4ff5f96ebd53e2c44142 • verified 2026-10-12
 
 ## Academic Project Title
 **Evidence-Centered Visualization for ML Security Engineering**
@@ -19,7 +19,7 @@ Security dashboards often show curated highlights with no path back to the under
 
 ## Threat Model
 Chain: UNTRACEABLE CLAIM -> EVIDENCE JSON -> FASTAPI AGGREGATOR -> REST + STATIC UI -> TRACEABLE DASHBOARD.
-Adversary capability: n/a — transparency / integrity goal; Assumptions: evidence files committed; local aggregation; Out of scope: live SOC monitoring; real-time telemetry; alerting; Residual risk: static snapshot may lag current CI.
+Adversary capability: n/a — transparency / integrity goal; Assumptions: evidence files committed; local aggregation; Out of scope: live SOC monitoring; real-time telemetry; alerting; Residual risk: static snapshot may lag cited CI.
 
 ## Research / Engineering Question
 > Can ML security claims be presented so each number traces back to a committed evidence file — including the weak results, not just the strong?
@@ -37,9 +37,9 @@ O4 — Show weak results explicitly
 1 Discover (repos) -> 2 Read (evidence) -> 3 Parse (JSON) -> 4 Render (HTML) -> 5 Serve (REST) -> 6 Auth (token)
 
 ## Evidence at Poster Snapshot + Claim Ledger
-- **VERIFIED_AT_SNAPSHOT** — Aggregates evidence from 8 active ML security repos — README; dashboard_server.py discovers sibling evidence/*.json.
-- **VERIFIED_AT_SNAPSHOT** — 37 test functions — Counted `def test_` definitions in `tests/` at source snapshot a14ee69; local verification records 37 passing pytest tests.
-- **VERIFIED_AT_SNAPSHOT** — Shows weak results explicitly (OOD F1 0.72, ROC-AUC 0.54) — README states weak-alongside-strong design; numbers sourced from sibling evidence files.
+- **VERIFIED_AT_SNAPSHOT** — Configures 8 default sibling repositories, with aggregation dependent on available evidence — README; dashboard_server.py discovers sibling evidence/*.json.
+- **VERIFIED_AT_SNAPSHOT** — 37 test functions — Counted `def test_` definitions in `tests/` at source snapshot c651768630530d2f8f2f4ff5f96ebd53e2c44142; local verification records 37 passing pytest tests.
+- **VERIFIED_AT_SNAPSHOT** — Shows weak results explicitly (OOD F1 0.72, ROC-AUC 0.54) — README states weak-alongside-strong design; these are cited sibling example values; static HTML examples are not all dynamically sourced.
 - **VERIFIED_AT_SNAPSHOT** — Token-authed REST API + static HTML — README features; dashboard_server.py.
 - **UNSUPPORTED (disclaimed)** — Live SOC monitoring / real-time alerting — README: static evidence snapshots, not live monitoring. Not claimed.
 
@@ -48,7 +48,7 @@ See RESULTS panel: Dashboards display weak results (OOD 0.72, ROC-AUC 0.54) next
 
 ## Limitations
 1. Static evidence snapshots, not live monitoring.
-2. Data can lag the current CI state of each repo.
+2. Data can lag the cited CI state of each repo.
 3. No alerting or real-time telemetry.
 4. Depends on sibling repos committing evidence.
 5. Local aggregation; not a hardened service.
@@ -69,3 +69,10 @@ Evidence: dashboard_server.py, sibling evidence/*.json, tests/
 
 ## References
 [1] FastAPI docs · [2] OWASP ML Security · [3] MITRE ATLAS · [4] Reproducible research practice · [5] SLSA provenance · [6] NIST AI RMF 1.0
+
+
+## Claim audit and rendered-source boundary, October 13, 2026 UTC
+
+The reviewed printed claims, source and test commit anchors, CI dates and benchmark limitations are in `verified_claims.json`. The PDF is generated from that manifest and the PNG is rasterized from the same page by `render_poster.py`. Source inventory, dated CI and separate reported experiments must not be combined into one result. Earlier artifact versions remain in Git history; these corrections do not assert production readiness.
+
+Offline poster rendering: `python -m pip install reportlab==4.4.9 PyMuPDF==1.26.6`, then `python poster/render_poster.py`. The font is bundled with the pinned ReportLab package; no browser or network fetch is used during rendering.

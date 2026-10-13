@@ -1,0 +1,55 @@
+{
+  "repository": "mlsec-dashboards",
+  "title": "Evidence-Centered Visualization for ML Security Engineering",
+  "subtitle": "Aggregating Repository-Level Measurements Into Traceable Technical Dashboards",
+  "license": "MIT",
+  "source_commit": "c651768630530d2f8f2f4ff5f96ebd53e2c44142",
+  "test_commit": "c651768630530d2f8f2f4ff5f96ebd53e2c44142",
+  "ci_run": 38298823655,
+  "ci_date": "2026-10-12",
+  "cards": [
+    {
+      "value": "37",
+      "label": "tests passed in cited CI"
+    },
+    {
+      "value": "8",
+      "label": "default configured repositories, not confirmed aggregation"
+    },
+    {
+      "value": "Token",
+      "label": "REST API authentication in implemented path"
+    },
+    {
+      "value": "JSON",
+      "label": "recognized metrics from available sibling files"
+    }
+  ],
+  "contribution": "An evidence-centered dashboard server that aggregates committed per-repo JSON into traceable HTML + a token-authed REST API, deliberately surfacing weak results (e.g. ROC-AUC 0.54, OOD F1 0.72) alongside strong ones rather than curating highlights.",
+  "methods": [
+    "Configure sibling repository locations.",
+    "Authenticate protected REST requests with the configured token.",
+    "Discover available JSON in supported evidence directories.",
+    "Extract recognized fields and return aggregate results.",
+    "Render static HTML examples separately; check each example against its cited inputs."
+  ],
+  "evidence": [
+    "Cited Python 3.12 CI: 37 passed. No coverage percentage is asserted.",
+    "Eight repositories are configured by default; the number successfully aggregated depends on available sibling files.",
+    "The server discovers JSON under evidence, results, metrics, reports, output and repository root, and extracts recognized shallow fields. Static authored dashboard examples are not all dynamically sourced.",
+    "Prior sibling examples use dimensionless metrics: grouped F1 about 0.97, OOD F1 about 0.72, ROC-AUC about 0.54. These are example inputs, not new dashboard measurements."
+  ],
+  "limitations": [
+    "Static evidence snapshots, not live monitoring.",
+    "Data can lag the current CI state of each repo.",
+    "No alerting or real-time telemetry.",
+    "Depends on sibling repos committing evidence.",
+    "Local aggregation; not a hardened service.",
+    "Not a live SOC monitor or hardened multi-user deployment; static snapshots can lag source CI."
+  ],
+  "reproduction": [
+    "git checkout c651768630530d2f8f2f4ff5f96ebd53e2c44142",
+    "Install the documented development dependencies; run python -m pytest tests/ -q. Use the cited job configuration when reproducing coverage.",
+    "Benchmark data, adapters and environment requirements are separate; consult poster/13_reproducibility.md and the claim ledger."
+  ]
+}
