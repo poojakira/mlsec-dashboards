@@ -415,6 +415,26 @@ def test_metric_values_cannot_include_secrets_or_nonfinite_numbers():
     )
 
 
+def test_metrics_preserve_same_basename_in_different_directories(
+    client, api_headers, tmp_path, monkeypatch
+):
+    import dashboard_server
+
+    for directory, count in (("evidence", 1), ("results", 2)):
+        path = tmp_path / "sample" / directory
+        path.mkdir(parents=True)
+        (path / "run.json").write_text(f'{{"tests_passed": {count}}}')
+    monkeypatch.setattr(dashboard_server, "REPOS_DIR", tmp_path)
+    monkeypatch.setattr(dashboard_server, "SIBLING_REPOS", ["sample"])
+    dashboard_server._rate_windows.clear()
+    result = client.get("/api/metrics", headers=api_headers).json()["repos"]["sample"]
+    assert result["metrics"] == {
+        "evidence/run.json": {"tests_passed": 1},
+        "results/run.json": {"tests_passed": 2},
+    }
+    assert result["summary"]["evidence_documents_with_metrics"] == 2
+
+
 def test_revoked_api_key_guard_uses_hash_without_storing_plaintext(monkeypatch):
     import hashlib
 

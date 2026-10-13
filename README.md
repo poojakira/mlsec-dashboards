@@ -11,12 +11,12 @@
 
 ## Verified Snapshot
 
-Reproduced on current `main` (Python 3.12).
+Local verification on 2026-10-13 UTC, Python 3.12.14, based on `d7d75965e1894892e8fdc0c92b70609a838cc9e8` plus the evidence-key regression fix. Remote CI and browser checks remain unexecuted.
 
 | Metric | Current verified result |
 |---|---:|
-| Tests | 37 passing (current local verification) |
-| Coverage | auth, health, metrics, dashboard rendering, evidence loading |
+| Tests | 38 passed, 0 failed, 0 skipped |
+| Statement coverage | 188/219 statements, 85.84% (`--cov=dashboard_server`) |
 | Source repos aggregated | 8 active ML security repos |
 | Auth | token-based on API routes |
 
@@ -43,14 +43,6 @@ Token-authenticated REST endpoints (aggregated metrics for CI)
 ```
 
 ## Core Capabilities
-
-- Discovers sibling repos and reads their `evidence/*.json` files
-- Per-project HTML dashboards with a shared design system
-- Aggregated metrics endpoint for CI integration
-- Token-based authentication on API routes
-- Shows gaps and weak results explicitly, not just highlights
-
-## Features
 
 - Discovers sibling repos and reads their `evidence/*.json` files
 - Per-project HTML dashboards with a shared design system
@@ -133,8 +125,7 @@ The index page explicitly states: "These are interactive evidence dashboards, no
 **Shared design system without build tools.**
 One CSS file and one JS file, included via `<link>` and `<script>`. No bundler, no npm, no build step. This keeps the repo simple and makes individual dashboards self-contained. The trade-off: no tree-shaking, no TypeScript, no component framework.
 
-**CORS restricted to localhost.**
-The server is an internal development tool. CORS only allows `localhost:8080` and `localhost:3000`. This is intentional and documented.
+**Configurable CORS.** Development defaults allow explicit localhost/127.0.0.1 origins on ports 8080 and 3000. Production defaults to same-origin; operators can configure explicit origins with `DASHBOARD_ALLOWED_ORIGINS`.
 
 ---
 
@@ -251,7 +242,7 @@ Each per-project dashboard reports metrics from that project's committed test su
 | HTTPS | Not included | Intended for local development |
 | Monitoring/alerting | None | No health check integrations |
 | CI/CD | Present | GitHub Actions directory exists |
-| Test coverage | Good | 37 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit, revoked-credential, and evidence-boundary regressions |
+| Test coverage | Good | 38 tests: auth, health, metrics extraction, JSON parsing, index-serving fallbacks, evidence size cap, rate-limit, revoked-credential, and evidence-boundary regressions |
 | Documentation | Good | README, RUNBOOK, SECURITY docs present |
 
 **Verdict:** Suitable for its stated local developer-tool and evidence-dashboard purpose. It is **not** presented as a production-facing service. Public deployment would require HTTPS, distributed/proxy rate limiting, structured logging, stronger operational secret management, and deployment-specific security review.
@@ -380,3 +371,7 @@ source, tests, scripts, examples, benchmarks, validation helpers, and poster gen
 where present. Ruff's standard exclusions omit version-control metadata, virtual
 environments, and build/cache directories; generated poster HTML/PDF/PNG assets are
 not Python source. Passing these static checks does not establish runtime behavior or product effectiveness.
+
+## Current verification and history
+
+Run `python -m pytest -q --cov=dashboard_server --cov-report=term` after installing `pytest-cov` in addition to `requirements.txt`. API metrics use repository-relative evidence paths, including `.json`, as keys so identical basenames in different directories remain separate. This changes the previous basename-only response keys; clients must use the returned path. Historical claims appear in [previos_runs.md](previos_runs.md). Static dashboard and poster figures remain historical snapshots pending full source and rendered-asset reconciliation.

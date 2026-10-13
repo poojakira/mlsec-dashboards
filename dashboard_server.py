@@ -446,7 +446,9 @@ async def api_metrics(_: str = Depends(verify_api_key)):
 
             extracted = _extract_metrics(data)
             if extracted:
-                file_key = evidence_file.stem
+                # Preserve provenance when different directories contain files
+                # with the same basename (for example results/run.json).
+                file_key = evidence_file.relative_to(REPOS_DIR / repo_name).as_posix()
                 repo_metrics["metrics"][file_key] = extracted
 
         # Evidence files can describe different datasets, attack populations,
