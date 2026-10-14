@@ -350,7 +350,7 @@ The API request budget is keyed to the connection peer, so rotating invalid keys
 
 Evidence storage must be operator-controlled and read-only to untrusted users. Symlink escapes and oversized reads are rejected, but the service is not a sandbox for a hostile local writer racing filesystem checks. Metrics containing strings, objects, booleans, or non-finite floats are ignored. The legacy HF renderer now escapes server-provided severity text and chooses CSS severity classes from a fixed allowlist.
 
-Current local verification: 37 pytest tests passed and the repository security-control scan passed. Hosted CI is manual-only; do not treat an older workflow run as evidence for this revision. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
+The historical local verification recorded 37 pytest tests passed and a passing repository security-control scan. At commit `ab136ef374d6fc6677b82ff53f51feceb463557a`, [push CI run 38625543414](https://github.com/poojakira/mlsec-dashboards/actions/runs/38625543414) on 2026-10-14 recorded 37 passed, 1 warning; lint, dependency audit and static checks passed. Hosted CI now runs on pushes; older workflow runs remain evidence only for their cited revisions. Legacy live/SSE pages refer to a separate localhost:9001 service not implemented here; they must not be treated as authenticated features of this read-only hub.
 
 
 ### Your local dashboard secret

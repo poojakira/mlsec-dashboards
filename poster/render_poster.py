@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import html
+import os
 import re
 import shutil
 import subprocess
@@ -72,7 +73,14 @@ subtitle = clean(sec("Subtitle"))
 contribution = clean(
     sec("One-Sentence Contribution", "Contribution", "Research Contribution")
 )
-methods = items(sec("Method", "Methodology"))[:6]
+method_block = sec("Method", "Methodology")
+methods = items(method_block)[:6]
+if not methods:
+    methods = [
+        clean(re.sub(r"^\s*\d+\s+", "", part))
+        for part in re.split(r"\s*(?:->|→)\s*", method_block)
+        if re.match(r"^\s*\d+\s+", part)
+    ][:6]
 evidence = items(
     sec(
         "Current Verified Evidence",
@@ -83,6 +91,7 @@ evidence = items(
 limits = items(
     sec(
         "Honest Boundaries",
+        "Claim Boundary",
         "Limitations",
         "Limitations & Residual Risk",
         "Not established by this repository",
@@ -94,6 +103,19 @@ repository = (
     clean(sec("Repository"))
     or f"github.com/poojakira/{repo.name.replace('_readonly_', '')}"
 )
+
+# The poster retains its primary historical snapshot; later checkpoints stay separate.
+poster_metrics = metrics_text.split("## Later CI checkpoint", 1)[0]
+snapshot = re.search(r"\b[0-9a-f]{40}\b", poster_metrics)
+if snapshot:
+    repro += "\nPoster evidence snapshot: " + snapshot.group(0)
+else:
+    short_snapshot = re.search(r"source snapshot\s+([0-9a-f]{7,40})", poster_metrics)
+    if short_snapshot:
+        repro += "\nHistorical poster evidence snapshot: " + short_snapshot.group(1)
+run_match = re.search(r"actions/runs/([0-9]{8,})", poster_metrics)
+if run_match:
+    repro += "\nPoster evidence CI run: " + run_match.group(1)
 
 metrics = []
 headline_match = re.search(
@@ -317,7 +339,24 @@ browsers = [
     Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
     Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
 ]
-browser = next((p for p in browsers if p.exists()), None)
+browser_env = os.environ.get("POSTER_BROWSER")
+browser = Path(browser_env) if browser_env else None
+if browser is None:
+    browser = next(
+        (
+            Path(candidate)
+            for name in (
+                "google-chrome",
+                "chromium",
+                "chromium-browser",
+                "microsoft-edge",
+            )
+            if (candidate := shutil.which(name))
+        ),
+        None,
+    )
+if browser is None:
+    browser = next((p for p in browsers if p.exists()), None)
 if browser is None:
     raise SystemExit("browser not found")
 pdf = poster / "poster_36x48.pdf"
@@ -329,6 +368,7 @@ subprocess.run(
         str(browser),
         "--headless=new",
         "--disable-gpu",
+        "--no-sandbox",
         f"--user-data-dir={profile}",
         "--no-pdf-header-footer",
         f"--print-to-pdf={pdf}",
