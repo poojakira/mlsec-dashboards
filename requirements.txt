@@ -1,6 +1,6 @@
 fastapi>=0.143.3
 uvicorn[standard]>=0.29
 httpx>=0.28.1
-pytest>=8.2
+pytest>=9.2.0
 ruff==0.17.1
 
